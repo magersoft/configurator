@@ -1,0 +1,73 @@
+# phpstorm project files
+.idea
+
+# netbeans project files
+nbproject
+
+# zend studio for eclipse project files
+.buildpath
+.project
+.settings
+
+# windows thumbnail cache
+Thumbs.db
+
+# composer vendor dir
+/vendor
+
+# library dir
+/node_modules
+
+# composer itself is not needed
+composer.phar
+
+# Mac DS_Store Files
+.DS_Store
+
+# phpunit itself is not needed
+phpunit.phar
+# local phpunit config
+/phpunit.xml
+
+tests/_output/*
+tests/_support/_generated
+
+#vagrant folder
+/.vagrant
+
+# configs
+/config/db.php
+/config/sphinx.php
+package-lock.json
+
+#generated js file
+web/js/app.js
+web/js/app.min.js
+web/js/vendor.js
+web/js/manifest.js
+web/js/main.js
+web/js/main.min.js
+
+#generated css file
+web/css/style.css
+web/css/style.min.css
+web/css/mobile/style.css
+web/css/mobile/style.min.css
+
+#generated fonts file
+web/fonts
+
+#generated images file
+/web/uploads
+/web/images
+/web/.htaccess
+/web/mix-manifest.json
+.htaccess
+
+#generated tests file
+deploy.sh
+/report/assets
+/report/eslint.html
+/report/mochawesome.html
+/report/mochawesome.json
+/report/public/images

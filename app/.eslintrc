@@ -1,0 +1,32 @@
+{
+  "extends": "airbnb",
+  "plugins": [
+    "jsx-a11y",
+    "react",
+    "import"
+  ],
+  "env": {
+    "browser": true,
+    "node": true,
+    "jasmine": true,
+    "mocha": true,
+    "es6": true,
+    "jquery": true
+  },
+  "rules": {
+    "no-param-reassign": 0,
+    "no-console": "off",
+    "func-names": ["error","never"],
+    "no-plusplus": "off",
+    "no-useless-escape": "off"
+  },
+  "globals": {
+    "axios": true,
+    "loading": true,
+    "alertify": true,
+    "gocart": true,
+    "grecaptcha": true,
+    "ymaps": true,
+    "ymapsvar": true
+  }
+}

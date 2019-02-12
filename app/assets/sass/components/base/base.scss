@@ -1,0 +1,55 @@
+//
+//** Base Elements
+//
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: array-get($font-families, heading);
+  font-weight: array-get($heading-font, weight);
+  margin: 0
+}
+
+h1 {
+  font-size: array-get($heading-font, size, h1)
+}
+
+h2 {
+  font-size: array-get($heading-font, size, h2);
+}
+
+h3 {
+  font-size: array-get($heading-font, size, h3);
+}
+
+h4 {
+  font-size: array-get($heading-font, size, h4);
+}
+
+a {
+  text-decoration-color: $accent-color;
+  color: $primary-color;
+  font-weight: 700;
+  &:hover {
+    color: $accent-color;
+  }
+  &:active {
+    color: $accent-color-h;
+  }
+}
+
+li {
+  list-style-type: none;
+  &:before {
+    color: $accent-color;
+    content: '•';
+    padding-right: 5px;
+  }
+}
+
+b, strong {
+  font-weight: bold;
+}

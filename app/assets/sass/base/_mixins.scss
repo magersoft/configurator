@@ -1,0 +1,93 @@
+//
+//** Global Mixins
+//
+
+//== Media Query - Responsive Below
+@mixin responsive-below($width) {
+  @media (max-width: #{$width}) {
+    @content;
+  }
+}
+
+//== Media Query - Responsive Above
+@mixin responsive-above($width) {
+  @media (min-width: #{$width}) {
+    @content;
+  }
+}
+
+//== Media Query - Min Desktop Mode
+@mixin minimal-desktop {
+  @media (min-width: #{map-get($layout-breakpoints, lg) + 1px}) and (max-width: #{map-get($layout-breakpoints, xl)}) {
+    @content;
+  }
+}
+
+//== Media Query - Min Desktop And Below Mode
+@mixin minimal-desktop-and-below {
+  @media (min-width: #{map-get($layout-breakpoints, xl)}) {
+    @content;
+  }
+}
+
+//== Media Query - Desktop Mode
+@mixin desktop {
+  @media (min-width: #{map-get($layout-breakpoints, lg) + 1px}) {
+    @content;
+  }
+}
+
+//== Media Query - Desktop & Tablet Modes
+@mixin desktop-and-tablet {
+  @media (min-width: #{map-get($layout-breakpoints, md) + 1px}) {
+    @content;
+  }
+}
+
+//== Media Query - Tablet Mode
+@mixin tablet {
+  @media (min-width: #{map-get($layout-breakpoints, md) + 1px}) and (max-width: #{map-get($layout-breakpoints, lg)}) {
+    @content;
+  }
+}
+
+//== Media Query - Tablet & Mobile Modes
+@mixin tablet-and-mobile {
+  @media (max-width: #{map-get($layout-breakpoints, lg)}) {
+    @content;
+  }
+}
+
+//== Media Query - Mobile Mode
+@mixin mobile {
+  @media (max-width: #{map-get($layout-breakpoints, md)}) {
+    @content;
+  }
+}
+
+//== IE8-11 versions hack
+@mixin hack-ie8-11 {
+  @media screen\0 {
+    @content;
+  }
+}
+//== Gradient background
+@mixin gradient-bg($alternative-bg, $liner-gradient) {
+  background: $alternative-bg; /* For browsers that do not support gradients */
+  background: -webkit-linear-gradient( $liner-gradient ); /* For Safari 5.1 to 6.0 */
+  background: -o-linear-gradient( $liner-gradient ); /* For Opera 11.1 to 12.0 */
+  background: -moz-linear-gradient( $liner-gradient ); /* For Firefox 3.6 to 15 */
+  background: linear-gradient( $liner-gradient ); /* Standard syntax */
+}
+
+//== Clearfix
+@mixin clearfix() {
+  &:before,
+  &:after {
+    content: " "; // 1
+    display: table; // 2
+  }
+  &:after {
+    clear: both;
+  }
+}
