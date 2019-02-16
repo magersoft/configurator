@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\models\Product;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
@@ -59,5 +60,11 @@ class ApiController extends Controller
         } else {
             return ['result' => 'error', 'messages' => $model->getFirstErrors()];
         }
+    }
+
+    public function actionProducts()
+    {
+
+        return Product::find()->all();
     }
 }
