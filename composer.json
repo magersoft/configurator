@@ -51,7 +51,9 @@
         "league/period": "^3.4",
         "beaten-sect0r/yii2-db-manager": "*",
         "nesbot/carbon": "^1.36",
-        "electrolinux/phpquery": "^0.9.6"
+        "electrolinux/phpquery": "^0.9.6",
+        "la-haute-societe/yii2-save-relations-behavior": "^1.7",
+        "caseyamcl/guzzle_retry_middleware": "^2.2"
     },
     "require-dev": {
         "yiisoft/yii2-debug": "~2.0.0",

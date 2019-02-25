@@ -12,7 +12,7 @@ use Yii;
  * @property string $url
  *
  * @property Product[] $products
- * @property ProductStore[] $productStores
+ * @property ProductRelations[] $productRelations
  */
 class Store extends \yii\db\ActiveRecord
 {
@@ -57,9 +57,9 @@ class Store extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getProductStores()
+    public function getProductRelations()
     {
-        return $this->hasMany(ProductStore::className(), ['store_id' => 'id']);
+        return $this->hasMany(ProductRelations::className(), ['store_id' => 'id']);
     }
 
     /**

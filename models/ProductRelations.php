@@ -5,23 +5,26 @@ namespace app\models;
 use Yii;
 
 /**
- * This is the model class for table "product_store".
+ * This is the model class for table "product_relations".
  *
  * @property int $id
  * @property int $product_id
  * @property int $store_id
+ * @property string $regular_price
+ * @property string $sale_price
+ * @property string $club_price
  *
  * @property Product $product
  * @property Store $store
  */
-class ProductStore extends \yii\db\ActiveRecord
+class ProductRelations extends \yii\db\ActiveRecord
 {
     /**
      * {@inheritdoc}
      */
     public static function tableName()
     {
-        return 'product_store';
+        return 'product_relations';
     }
 
     /**
@@ -32,7 +35,7 @@ class ProductStore extends \yii\db\ActiveRecord
         return [
             [['product_id', 'store_id'], 'required'],
             [['product_id', 'store_id'], 'integer'],
-            [['product_id', 'store_id'], 'unique', 'targetAttribute' => ['product_id', 'store_id']],
+            [['regular_price', 'sale_price', 'club_price'], 'number'],
             [['product_id'], 'exist', 'skipOnError' => true, 'targetClass' => Product::className(), 'targetAttribute' => ['product_id' => 'id']],
             [['store_id'], 'exist', 'skipOnError' => true, 'targetClass' => Store::className(), 'targetAttribute' => ['store_id' => 'id']],
         ];
@@ -47,6 +50,9 @@ class ProductStore extends \yii\db\ActiveRecord
             'id' => Yii::t('app', 'ID'),
             'product_id' => Yii::t('app', 'Product ID'),
             'store_id' => Yii::t('app', 'Store ID'),
+            'regular_price' => Yii::t('app', 'Regular Price'),
+            'sale_price' => Yii::t('app', 'Sale Price'),
+            'club_price' => Yii::t('app', 'Club Price'),
         ];
     }
 
@@ -68,10 +74,10 @@ class ProductStore extends \yii\db\ActiveRecord
 
     /**
      * {@inheritdoc}
-     * @return ProductStoreQuery the active query used by this AR class.
+     * @return ProductRelationsQuery the active query used by this AR class.
      */
     public static function find()
     {
-        return new ProductStoreQuery(get_called_class());
+        return new ProductRelationsQuery(get_called_class());
     }
 }

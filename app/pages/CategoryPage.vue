@@ -1,6 +1,7 @@
 <template>
     <div>
-        <h1>Products</h1>
+        <h1>Category</h1>
+
         <div v-for="product in products">
             <h2>{{ product.title }}</h2>
             <img :src="product.thumbnail" alt="">
@@ -13,7 +14,7 @@
     export default {
         data() {
             return {
-                products: [],
+                products: []
             }
         },
         computed: {
@@ -23,12 +24,11 @@
 
         },
         mounted() {
-            axios({
-                method: 'post',
-                url: '/api/products'
-            }).then((response) => {
-                this.products = response.data;
-            })
+            console.log(this.$route.params.id);
+            axios.post('/api/products', { id: this.$route.params.id })
+                .then((response) => {
+                    this.products = response.data;
+                })
         }
     }
 </script>

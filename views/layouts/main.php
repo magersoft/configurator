@@ -42,8 +42,8 @@ AppAsset::register($this);
                             <li :class="{'active' : isActiveMenu('/login')}">
                                 <router-link to="/login">Login</router-link>
                             </li>
-                            <li :class="{'active' : isActiveMenu('/products')}">
-                                <router-link to="/products">Products</router-link>
+                            <li :class="{'active' : isActiveMenu('/categories')}">
+                                <router-link to="/categories">Categories</router-link>
                             </li>
                         </ul>
                     </div>

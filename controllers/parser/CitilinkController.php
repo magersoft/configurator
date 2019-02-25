@@ -11,6 +11,9 @@ namespace app\controllers\parser;
 
 use app\models\Category;
 use app\models\Product;
+use app\models\ProductRelations;
+use GuzzleHttp\HandlerStack;
+use GuzzleRetry\GuzzleRetryMiddleware;
 use yii\web\Controller;
 use GuzzleHttp\Client;
 
@@ -62,8 +65,9 @@ class CitilinkController extends Controller
 
         $categories = Category::find()->all();
 
+        $client = new Client();
+
         foreach ($categories as $category) {
-            $client = new Client();
 
             $res = $client->request('GET', $category->slug);
 
@@ -101,14 +105,13 @@ class CitilinkController extends Controller
 
             $id = (int)$data['id'];
             $title = $data['shortName'];
-            $regular_price = (int)$data['price'];
+            $link = $pq->find('a')->attr('href');
             $thumbnail = ($pq->find('img')->attr('src')) ? $pq->find('img')->attr('src') : $pq->find('img')->attr('data-src');
 
             $exists_product = Product::findOne(['unique_id' => $id]);
 
             if ($exists_product) {
                 ($exists_product->title === $title) ?: $exists_product->title  = $title;
-                ($exists_product->regular_price === $regular_price) ?: $exists_product->regular_price =  $regular_price;
                 ($exists_product->thumbnail === $thumbnail) ?: $exists_product->thumbnail = $thumbnail;
                 $exists_product->store_id = 1;
                 $exists_product->save();
@@ -116,14 +119,135 @@ class CitilinkController extends Controller
                 $model = new Product();
                 $model->unique_id = $id;
                 $model->title = $title;
-                $model->regular_price = $regular_price;
+                $model->link = $link;
                 $model->thumbnail = $thumbnail;
                 $model->category_id = $category_id;
                 $model->store_id = 1;
                 $model->status = 1;
                 $model->save();
+                $model->validate();
+                \Yii::error($model->errors);
             }
 
         }
+    }
+
+    public function actionPrice()
+    {
+        $stack = HandlerStack::create();
+        $stack->push(GuzzleRetryMiddleware::factory());
+
+        $client = new Client([
+            'base_uri' => 'https://api.citilink.ru/v1/product/msk_cl:/',
+            'handler' => $stack,
+            'headers' => "{'User-agent': 'your bot 0.1'}"
+        ]);
+
+        // todo: короче тут можно сказать гузлу, не агриться на 429 ответ
+        // сделать while и заставить скрипт спать, пока 429-ая
+
+        $products = Product::find()->all();
+
+        foreach ($products as $product) {
+            $api = $client->get("{$product->unique_id}", [
+                'default_retry_multiplier' => 2.5,
+                'retry_on_timeout' => true,
+                'connect_timeout' => 120,
+                'timeout' => 120,
+            ]);
+
+            $response = json_decode($api->getBody(), true);
+
+            $data = $response['data'];
+
+            $card = $data['card'];
+
+            $regular_price = $card['price'];
+            $sale_price = $card['fakeOldPrice'];
+            $club_price = $card['clubPrice'];
+
+            $exists_product_relations = ProductRelations::findOne(['store_id' => $product->store_id, 'regular_price' => $regular_price, 'sale_price' => $sale_price, 'club_price' => $club_price]);
+
+            if ($exists_product_relations) {
+                continue;
+            } else {
+                $model = new ProductRelations();
+                $model->product_id = $product->id;
+                $model->store_id = $product->store_id;
+                $model->regular_price = $regular_price;
+                $model->sale_price = $sale_price;
+                $model->club_price = $club_price;
+                $model->link('product', $product);
+            }
+
+        }
+
+        return $this->render('citilink');
+    }
+
+    public function actionTest()
+    {
+        $stack = HandlerStack::create();
+        $stack->push(GuzzleRetryMiddleware::factory());
+
+        $client = new Client([
+            'base_uri' => 'https://api.citilink.ru/v1/product/msk_cl:/',
+            'handler' => $stack
+        ]);
+
+        $product = Product::findOne(['id' => 2175]);
+
+        $api = $client->get("1031618", [
+            'default_retry_multiplier' => 2.5,
+            'retry_on_timeout' => true,
+            'connect_timeout' => 120,
+            'timeout' => 120,
+        ]);
+
+        $response = json_decode($api->getBody(), true);
+
+        $data = $response['data'];
+
+        $card = $data['card'];
+
+        $regular_price = $card['price'];
+        $sale_price = $card['fakeOldPrice'];
+        $club_price = $card['clubPrice'];
+
+        $exists_product_relations = ProductRelations::findOne(['store_id' => $product->store_id, 'regular_price' => $regular_price, 'sale_price' => $sale_price, 'club_price' => $club_price]);
+
+        if ($exists_product_relations) {
+
+        } else {
+            $model = new ProductRelations();
+            $model->product_id = $product->id;
+            $model->store_id = $product->store_id;
+            $model->regular_price = $regular_price;
+            $model->sale_price = $sale_price;
+            $model->club_price = $club_price;
+            $model->link('product', $product);
+        }
+
+//        $model = new Product();
+//        $model->unique_id = 1488;
+//        $model->title = 'test';
+//        $model->thumbnail = 'thumb';
+//        $model->category_id = 20;
+//        $model->store_id = 1;
+//        $model->status = 1;
+//        $model->save();
+//        $model->validate();
+//        \Yii::error($model->errors);
+//        $relations = new ProductRelations();
+//        $relations->product_id = $model->id;
+//        $relations->regular_price = '123';
+//        $relations->store_id = 1;
+//        $relations->save();
+//        $relations->validate();
+//        \Yii::error($relations->errors);
+
+
+        return $this->render('citilink');
+
     }
 }

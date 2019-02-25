@@ -2,7 +2,9 @@
 
 namespace app\controllers;
 
+use app\models\Category;
 use app\models\Product;
+use app\models\ProductRelations;
 use Yii;
 use yii\web\Controller;
 use yii\web\Response;
@@ -62,9 +64,14 @@ class ApiController extends Controller
         }
     }
 
+    public function actionCategories()
+    {
+        return Category::find()->all();
+    }
+
     public function actionProducts()
     {
-
-        return Product::find()->all();
+        $id = Yii::$app->request->post('id');
+        return Product::find()->where(['category_id' => $id])->all();
     }
 }
