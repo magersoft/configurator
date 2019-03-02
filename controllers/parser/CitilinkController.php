@@ -14,6 +14,7 @@ use app\models\Product;
 use app\models\ProductRelations;
 use GuzzleHttp\HandlerStack;
 use GuzzleRetry\GuzzleRetryMiddleware;
+use phpDocumentor\Reflection\Types\Integer;
 use yii\web\Controller;
 use GuzzleHttp\Client;
 
@@ -134,55 +135,87 @@ class CitilinkController extends Controller
 
     public function actionPrice()
     {
-        $stack = HandlerStack::create();
-        $stack->push(GuzzleRetryMiddleware::factory());
+//        $stack = HandlerStack::create();
+//        $stack->push(GuzzleRetryMiddleware::factory());
 
         $client = new Client([
             'base_uri' => 'https://api.citilink.ru/v1/product/msk_cl:/',
-            'handler' => $stack,
-            'headers' => "{'User-agent': 'your bot 0.1'}"
+            //'handler' => $stack,
         ]);
 
-        // todo: короче тут можно сказать гузлу, не агриться на 429 ответ
-        // сделать while и заставить скрипт спать, пока 429-ая
+        $sleeping_time = 60;
 
-        $products = Product::find()->all();
+        $products = Product::find()->limit(100)->all();
 
-        foreach ($products as $product) {
+        while ($products) {
+
+            $product = array_shift($products);
+
             $api = $client->get("{$product->unique_id}", [
-                'default_retry_multiplier' => 2.5,
-                'retry_on_timeout' => true,
-                'connect_timeout' => 120,
-                'timeout' => 120,
+                'http_errors' => false
             ]);
 
-            $response = json_decode($api->getBody(), true);
-
-            $data = $response['data'];
-
-            $card = $data['card'];
-
-            $regular_price = $card['price'];
-            $sale_price = $card['fakeOldPrice'];
-            $club_price = $card['clubPrice'];
-
-            $exists_product_relations = ProductRelations::findOne(['store_id' => $product->store_id, 'regular_price' => $regular_price, 'sale_price' => $sale_price, 'club_price' => $club_price]);
-
-            if ($exists_product_relations) {
-                continue;
+            if ($api->getStatusCode() === 429) {
+                sleep($sleeping_time);
+                self::foreachArray($product, $client, $sleeping_time);
+            } else if ($api->getStatusCode() === 200) {
+                self::saveResponse($product, $api);
             } else {
-                $model = new ProductRelations();
-                $model->product_id = $product->id;
-                $model->store_id = $product->store_id;
-                $model->regular_price = $regular_price;
-                $model->sale_price = $sale_price;
-                $model->club_price = $club_price;
-                $model->link('product', $product);
+                \Yii::error($api->getStatusCode());
             }
-
         }
 
         return $this->render('citilink');
+    }
+
+    private static function foreachArray(Product $product, Client $client, int $seconds)
+    {
+        $sleeping_time = $seconds * 2;
+
+        if ($sleeping_time > 900) {
+            $sleeping_time = 900;
+        }
+
+        $api = $client->get("{$product->unique_id}", [
+            'http_errors' => false
+        ]);
+
+        if ($api->getStatusCode() === 429) {
+            sleep($seconds);
+            self::foreachArray($product, $client, $sleeping_time);
+        } else if ($api->getStatusCode() === 200) {
+            self::saveResponse($product, $api);
+        } else {
+            \Yii::error($api->getStatusCode());
+        }
+    }
+
+    private static function saveResponse(Product $product, $api) {
+        $response = json_decode($api->getBody(), true);
+
+        $data = $response['data'];
+
+        $card = $data['card'];
+
+        $regular_price = $card['price'];
+
+
+        $sale_price = $card['fakeOldPrice'];
+        $club_price = $card['clubPrice'];
+
+        $exists_product_relations = ProductRelations::findOne(['store_id' => $product->store_id, 'regular_price' => $regular_price, 'sale_price' => $sale_price, 'club_price' => $club_price]);
+
+        if ($exists_product_relations) {
+            \Yii::error('exist');
+        } else {
+            $model = new ProductRelations();
+            $model->product_id = $product->id;
+            $model->store_id = $product->store_id;
+            $model->regular_price = $regular_price;
+            $model->sale_price = $sale_price;
+            $model->club_price = $club_price;
+            $model->link('product', $product);
+        }
     }
 
     public function actionTest()
