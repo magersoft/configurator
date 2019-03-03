@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "db8b983e973fc8c1272a097721816385",
+    "content-hash": "d6977277e9b30a19d5cb03ce88e0e28c",
     "packages": [
         {
             "name": "2amigos/yii2-ckeditor-widget",
@@ -2061,6 +2061,51 @@
                 "vector"
             ],
             "time": "2018-11-04T22:12:12+00:00"
+        },
+        {
+            "name": "megahertz/guzzle-tor",
+            "version": "v1.0.4",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/megahertz/guzzle-tor.git",
+                "reference": "171dcb62ef2a8231463671e080c29cfe9fdaae3f"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/megahertz/guzzle-tor/zipball/171dcb62ef2a8231463671e080c29cfe9fdaae3f",
+                "reference": "171dcb62ef2a8231463671e080c29cfe9fdaae3f",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^6.1@stable"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "4.*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "GuzzleTor\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alexey Prokhorov",
+                    "email": "alexey.p@l96.ru"
+                }
+            ],
+            "description": "This Guzzle middleware allows to use Tor client as a proxy",
+            "homepage": "http://github.com/megahertz/guzzle-tor",
+            "keywords": [
+                "Guzzle",
+                "onion",
+                "tor"
+            ],
+            "time": "2016-03-26T03:44:56+00:00"
         },
         {
             "name": "mihaildev/yii2-ckeditor",

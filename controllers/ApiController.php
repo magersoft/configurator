@@ -72,6 +72,15 @@ class ApiController extends Controller
     public function actionProducts()
     {
         $id = Yii::$app->request->post('id');
-        return Product::find()->where(['category_id' => $id])->all();
+        $products = Product::find()->where(['category_id' => $id])->all();
+        $result = [];
+        foreach ($products as $product) {
+            $result[] = [
+                'title' => $product->title,
+                'thumbnail' => $product->thumbnail,
+                'regular_price' => ProductRelations::findOne(['product_id' => $product->id])->regular_price
+            ];
+        }
+        return $result;
     }
 }

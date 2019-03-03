@@ -12,9 +12,11 @@ use yii\behaviors\TimestampBehavior;
  * @property int $id
  * @property string $title
  * @property string $description
+ * @property string $short_description
  * @property string $short_title
  * @property string $thumbnail
  * @property string $link
+ * @property string $brand
  * @property int $category_id
  * @property int $store_id
  * @property int $status
@@ -27,9 +29,19 @@ use yii\behaviors\TimestampBehavior;
  * @property Store $store
  * @property Category $category
  * @property ProductRelations[] $productRelations
+ * @property PropertyRelations[] $propertyRelations
  */
 class Product extends \yii\db\ActiveRecord
 {
+    const PRODUCT_STATUS_VALUE_DRAFT = 0;
+    const PRODUCT_STATUS_VALUE_PUBLIC = 1;
+    const PRODUCT_STATUS_VALUE_ARCHIVE = 2;
+
+    const PRODUCT_STATUS_VALUE_DISPLAY = [
+        self::PRODUCT_STATUS_VALUE_PUBLIC => 'Опубликован',
+        self::PRODUCT_STATUS_VALUE_DRAFT => 'Не опубликован',
+        self::PRODUCT_STATUS_VALUE_ARCHIVE => 'В архиве',
+    ];
 
     public function behaviors()
     {
@@ -53,9 +65,10 @@ class Product extends \yii\db\ActiveRecord
     {
         return [
             [['title', 'category_id', 'store_id', 'unique_id'], 'required'],
-            [['description'], 'string'],
+            [['description', 'short_description'], 'string'],
             [['category_id', 'store_id', 'status', 'unique_id', 'created_at', 'updated_at'], 'integer'],
             [['title', 'short_title', 'thumbnail', 'link'], 'string', 'max' => 255],
+            [['brand'], 'string', 'max' => 100],
             [['unique_id'], 'unique'],
             [['store_id'], 'exist', 'skipOnError' => true, 'targetClass' => Store::className(), 'targetAttribute' => ['store_id' => 'id']],
             [['category_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::className(), 'targetAttribute' => ['category_id' => 'id']],
@@ -71,9 +84,11 @@ class Product extends \yii\db\ActiveRecord
             'id' => Yii::t('app', 'ID'),
             'title' => Yii::t('app', 'Title'),
             'description' => Yii::t('app', 'Description'),
+            'short_description' => Yii::t('app', 'Short Description'),
             'short_title' => Yii::t('app', 'Short Title'),
             'thumbnail' => Yii::t('app', 'Thumbnail'),
             'link' => Yii::t('app', 'Link'),
+            'brand' => Yii::t('app', 'Brand'),
             'category_id' => Yii::t('app', 'Category ID'),
             'store_id' => Yii::t('app', 'Store ID'),
             'status' => Yii::t('app', 'Status'),
@@ -121,6 +136,14 @@ class Product extends \yii\db\ActiveRecord
     public function getProductRelations()
     {
         return $this->hasMany(ProductRelations::className(), ['product_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPropertyRelations()
+    {
+        return $this->hasMany(PropertyRelations::className(), ['product_id' => 'id']);
     }
 
     /**
