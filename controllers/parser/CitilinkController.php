@@ -62,12 +62,15 @@ class CitilinkController extends Controller
 
             $categories = $document->find('#content > div > div > div.category-content > span.category-content__link-title');
 
-            foreach ($categories as $category) { // todo: delete pc_platform category
+            foreach ($categories as $category) {
                 $pq = pq($category);
 
                 preg_match_all('!\d+!', $pq->attr('data-category-id'), $matches);
 
                 $id = (int)$matches[0][0];
+                if ($id === 100127) {
+                    continue; // skip pc_platform category
+                }
                 $title = trim($pq->find('a')->text());
                 $slug = $pq->find('a')->attr('href');
 
@@ -144,7 +147,7 @@ class CitilinkController extends Controller
 
         $sleeping_time = 60;
 
-        $products = Product::find()->limit(1)->all();
+        $products = Product::find()->all();
 
         while ($products) {
 
@@ -192,7 +195,7 @@ class CitilinkController extends Controller
                 $exists_product = Product::findOne(['unique_id' => $id]);
 
                 if ($exists_product) {
-                    ($exists_product->title === $short_title) ?: $exists_product->title  = $short_title;
+                    ($exists_product->short_title === $short_title) ?: $exists_product->short_title  = $short_title;
                     ($exists_product->thumbnail === $thumbnail) ?: $exists_product->thumbnail = $thumbnail;
                     $exists_product->store_id = self::STORE_ID;
                     $exists_product->save();
