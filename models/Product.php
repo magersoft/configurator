@@ -29,6 +29,7 @@ use yii\behaviors\TimestampBehavior;
  * @property Store $store
  * @property Category $category
  * @property ProductRelations[] $productRelations
+ * @property ProductStock[] $productStocks
  * @property PropertyRelations[] $propertyRelations
  */
 class Product extends \yii\db\ActiveRecord
@@ -136,6 +137,14 @@ class Product extends \yii\db\ActiveRecord
     public function getProductRelations()
     {
         return $this->hasMany(ProductRelations::className(), ['product_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProductStocks()
+    {
+        return $this->hasMany(ProductStock::className(), ['product_id' => 'id']);
     }
 
     /**

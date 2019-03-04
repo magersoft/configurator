@@ -76,7 +76,7 @@ class ApiController extends Controller
         $result = [];
         foreach ($products as $product) {
             $result[] = [
-                'title' => $product->title,
+                'short_title' => $product->short_title,
                 'thumbnail' => $product->thumbnail,
                 'regular_price' => ProductRelations::findOne(['product_id' => $product->id])->regular_price
             ];

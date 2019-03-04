@@ -13,6 +13,7 @@ use Yii;
  *
  * @property Product[] $products
  * @property ProductRelations[] $productRelations
+ * @property Stock[] $stocks
  */
 class Store extends \yii\db\ActiveRecord
 {
@@ -44,6 +45,14 @@ class Store extends \yii\db\ActiveRecord
             'name' => Yii::t('app', 'Name'),
             'url' => Yii::t('app', 'Url'),
         ];
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getStocks()
+    {
+        return $this->hasMany(Stock::className(), ['store_id' => 'id']);
     }
 
     /**

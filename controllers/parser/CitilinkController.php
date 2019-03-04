@@ -12,9 +12,12 @@ namespace app\controllers\parser;
 use app\models\Category;
 use app\models\Product;
 use app\models\ProductRelations;
+use app\models\ProductStock;
 use app\models\Property;
 use app\models\PropertyGroup;
 use app\models\PropertyRelations;
+use app\models\Stock;
+use app\models\Store;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\CurlHandler;
 use GuzzleHttp\HandlerStack;
@@ -35,6 +38,20 @@ class CitilinkController extends Controller
     private $region = 'msk_cl:';
 
     private $torIp = '127.0.0.1:9150';
+
+    public function actionStore()
+    {
+        $exist = Store::findOne(['id' => self::STORE_ID]);
+
+        if (!$exist) {
+            $model = new Store();
+            $model->name = 'Ситилинк';
+            $model->url = $this->url;
+            $model->save();
+        }
+
+        // todo: Save more info about store
+    }
 
     /**
      * @return bool|string
@@ -250,13 +267,16 @@ class CitilinkController extends Controller
 
         $existsProduct = ProductRelations::findOne(['product_id' => $product->id]);
 
+        self::saveStock($response);
+
         if ($existsProduct) {
             \Yii::warning(['exist' => $product->id]);
             self::updateProductRelations($existsProduct, $response);
-            self::savePropertyGroup($product, $response);
+            self::saveStockSummary($product, $response);
         } else {
             self::saveProductRelations($product, $response);
             self::savePropertyGroup($product, $response);
+            self::saveStockSummary($product, $response);
         }
     }
 
@@ -266,8 +286,6 @@ class CitilinkController extends Controller
         $card = $data['card'];
         // todo: for future private methods
         $photos = $data['photos'];
-        $stockList = $data['stockList'];
-        $stockSummary = $data['stockSummary'];
         $deliveryInfo = $data['deliveryInfo'];
         $mainProperties = $data['mainProperties'];
 
@@ -278,10 +296,12 @@ class CitilinkController extends Controller
             $model->regular_price = $card['price'];
             $model->sale_price = $card['fakeOldPrice'];
             $model->club_price = $card['clubPrice'];
-            $model->product->title = $card['name'];
-            $model->product->short_description = $card['shortCard'];
-            $model->product->brand = $card['brand'];
             $model->link('product', $product);
+
+            $product->title = $card['name'];
+            $product->short_description = $card['shortCard'];
+            $product->brand = $card['brand'];
+            $product->save();
         }
     }
 
@@ -322,6 +342,53 @@ class CitilinkController extends Controller
                         $model->desc = $propertyItem['desc'];
                         $model->link('product', $product);
                     }
+                }
+            }
+        }
+    }
+
+    private static function saveStock(array $response)
+    {
+        $data = $response['data'];
+        $stocks = $data['stockList'];
+
+        if ($stocks) {
+            foreach ($stocks as $stock) {
+                $exist = Stock::findOne(['name' => $stock['name']]);
+
+                if (!$exist) {
+                    $model = new Stock();
+                    $model->name = $stock['name'];
+                    $model->type = $stock['stock']['type'];
+                    $model->index = $stock['stock']['index'];
+                    $model->store_id = self::STORE_ID;
+                    $model->save();
+                }
+            }
+        }
+
+    }
+
+    private static function saveStockSummary(Product $product, array $response)
+    {
+        $data = $response['data'];
+        $stocksSummary = $data['stockSummary'];
+
+        if ($stocksSummary) {
+            foreach ($stocksSummary as $stock) {
+                $findStock = Stock::findOne(['name' => $stock['name']]);
+                $exist = ProductStock::findOne([
+                    'product_id' => $product->id,
+                    'stock_id' => $findStock->id,
+                    'count' => $stock['count']
+                ]);
+
+                if (!$exist) {
+                    $model = new ProductStock();
+                    $model->product_id = $product->id;
+                    $model->stock_id = $findStock->id;
+                    $model->count = $stock['count'];
+                    $model->save();
                 }
             }
         }
