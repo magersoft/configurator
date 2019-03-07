@@ -9,6 +9,7 @@
 namespace app\controllers\parser;
 
 
+use app\components\NotifyEmail;
 use app\models\Category;
 use app\models\Product;
 use app\models\ProductRelations;
@@ -21,9 +22,7 @@ use app\models\Store;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\CurlHandler;
 use GuzzleHttp\HandlerStack;
-use GuzzleRetry\GuzzleRetryMiddleware;
 use GuzzleTor\Middleware;
-use phpDocumentor\Reflection\Types\Integer;
 use yii\web\Controller;
 use GuzzleHttp\Client;
 
@@ -38,6 +37,7 @@ class CitilinkController extends Controller
     private $region = 'msk_cl:';
 
     private $torIp = '127.0.0.1:9150';
+
 
     public function actionStore()
     {
@@ -151,8 +151,10 @@ class CitilinkController extends Controller
      * @return string
      * @use Middleware/Tor
      */
-    public function actionProduct()
+    public function actionProduct($unique_id = null, $begining_id = null, $limit = null)
     {
+        $start = microtime(true);
+
         $stack = new HandlerStack();
         $stack->setHandler(new CurlHandler());
         $stack->push(Middleware::tor($this->torIp));
@@ -164,7 +166,25 @@ class CitilinkController extends Controller
 
         $sleeping_time = 60;
 
-        $products = Product::find()->all();
+        if ($limit) {
+            $products = Product::find()->limit((int)$limit)->all();
+        } else if ($unique_id) {
+            $products = Product::find()->where(['unique_id' => (int)$unique_id])->all();
+        } else if ($begining_id) {
+            $products = Product::find()->where(['>', 'id' => $begining_id])->orderBy('id')->all();
+        } else if ($begining_id && $limit) {
+            $products = Product::find()->where(['>', 'id' => $begining_id])->limit((int)$limit)->orderBy('id')->all();
+        } else {
+            $products = Product::find()->all();
+        }
+
+        /**
+         * get Debug info
+         */
+        $count_iteration = 0;
+        $if429 = 0;
+        $if301 = 0;
+        $saved_product = 0;
 
         while ($products) {
 
@@ -174,18 +194,39 @@ class CitilinkController extends Controller
                 'http_errors' => false
             ]);
 
+            $count_iteration++;
+
             if ($api->getStatusCode() === 429) {
+                $if429++;
                 self::changeIp($product, $client, $sleeping_time);
             } else if ($api->getStatusCode() === 301) {
+                $if301++;
                 self::notFoundProduct($product);
             } else if ($api->getStatusCode() === 200) {
+                $saved_product++;
                 self::saveProduct($product, $api);
             } else {
                 \Yii::error($api->getStatusCode());
             }
         }
 
-        return $this->render('citilink');
+        $time = microtime(true) - $start;
+
+        NotifyEmail::sendParserInfo([
+            'count' => $count_iteration,
+            'if429' => $if429,
+            'if301' => $if301,
+            'saved' => $saved_product,
+            'time' => $time
+        ]);
+
+        return $this->render('citilink', [
+            'count' => $count_iteration,
+            'if429' => $if429,
+            'if301' => $if301,
+            'saved' => $saved_product,
+            'time' => $time
+        ]);
     }
 
     private static function catalogPages(Client $client, $page_number, $category_id, $category_slug)
@@ -271,8 +312,9 @@ class CitilinkController extends Controller
 
         if ($existsProduct) {
             \Yii::warning(['exist' => $product->id]);
+            self::updateProduct($product, $response);
             self::updateProductRelations($existsProduct, $response);
-            self::saveStockSummary($product, $response);
+            self::updateStockSummary($product, $response);
         } else {
             self::saveProductRelations($product, $response);
             self::savePropertyGroup($product, $response);
@@ -394,15 +436,49 @@ class CitilinkController extends Controller
         }
     }
 
+    private static function updateProduct(Product $model, array $response)
+    {
+        $data = $response['data'];
+        $card = $data['card'];
+
+        if ($card) {
+            $model->title = $card['name'];
+            $model->short_description = $card['shortCard'];
+            $model->brand = $card['brand'];
+            $model->save();
+        }
+    }
+
     private static function updateProductRelations(ProductRelations $model, array $response)
     {
         $data = $response['data'];
         $card = $data['card'];
 
-        $model->regular_price = $card['price'];
-        $model->sale_price = $card['fakeOldPrice'];
-        $model->club_price = $card['clubPrice'];
-        $model->save();
+        if ($card) {
+            $model->regular_price = $card['price'];
+            $model->sale_price = $card['fakeOldPrice'];
+            $model->club_price = $card['clubPrice'];
+            $model->save();
+        }
+    }
+
+    private static function updateStockSummary(Product $model, array $response)
+    {
+        $data = $response['data'];
+        $stocksSummary = $data['stockSummary'];
+
+        if ($stocksSummary) {
+            foreach ($stocksSummary as $stock) {
+                $findStock = Stock::findOne(['name' => $stock['name']]);
+                $productStock = ProductStock::findOne(['product_id' => $model->id, 'stock_id' => $findStock]);
+                if ($productStock) {
+                    $productStock->count = $stock['count'];
+                    $productStock->save();
+                } else {
+                    self::saveStockSummary($model, $response);
+                }
+            }
+        }
     }
 
     private static function notFoundProduct(Product $product)
