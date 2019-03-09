@@ -24,7 +24,7 @@ AppAsset::register($this);
     <?php $this->beginBody() ?>
 
     <div class="wrap" id="app">
-        <div class="container">
+        <div style="width: 1170px; margin-right: auto; margin-left: auto;">
             <nav id="w0" class="navbar-inverse navbar-fixed-top navbar">
                 <div class="container">
                     <div class="navbar-header">
@@ -45,17 +45,23 @@ AppAsset::register($this);
                             <li :class="{'active' : isActiveMenu('/categories')}">
                                 <router-link to="/categories">Categories</router-link>
                             </li>
+                            <li>
+                                <a href="<?= \yii\helpers\Url::to(['parser/citilink/index']) ?>">
+                                    Ситилинк
+                                </a>
+                            </li>
                         </ul>
                     </div>
                 </div>
             </nav>
-            <transition>
-                <router-view></router-view>
-            </transition>
-            <div v-if="this.$route.matched.length == 0">
+        </div>
+        <transition>
+            <router-view></router-view>
+        </transition>
+        <div v-if="this.$route.matched.length == 0">
+            <div class="container" style="padding-top: 50px;">
                 <?= $content ?>
             </div>
-
         </div>
     </div>
 

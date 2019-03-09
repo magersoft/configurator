@@ -23,8 +23,10 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Handler\CurlHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleTor\Middleware;
+use yii\filters\VerbFilter;
 use yii\web\Controller;
 use GuzzleHttp\Client;
+use yii\web\ForbiddenHttpException;
 
 class CitilinkController extends Controller
 {
@@ -38,17 +40,69 @@ class CitilinkController extends Controller
 
     private $torIp = '127.0.0.1:9150';
 
+    public function behaviors()
+    {
+        return [
+            'verbs' => [
+                'class' => VerbFilter::className(),
+                'actions' => [
+                    'store' => ['post'],
+                    'category' => ['post'],
+                    'catalog' => ['post'],
+                    'product' => ['post'],
+                ],
+            ],
+        ];
+    }
 
+    /**
+     * @return string
+     */
+    public function actionIndex()
+    {
+        $category_count = Category::find()->count();
+        $product_count = Product::find()->count();
+        $product_relations_count = ProductRelations::find()->count();
+        $stock_count = Stock::find()->count();
+
+        return $this->render('citilink', [
+            'product_count' => $product_count,
+            'category_count' => $category_count,
+            'product_relations_count' => $product_relations_count,
+            'stock_count' => $stock_count
+        ]);
+    }
+
+    /**
+     * @return string
+     * @throws GuzzleException
+     */
     public function actionStore()
     {
-        $exist = Store::findOne(['id' => self::STORE_ID]);
+        $stack = new HandlerStack();
+        $stack->setHandler(new CurlHandler());
+        $stack->push(Middleware::tor($this->torIp));
 
-        if (!$exist) {
-            $model = new Store();
-            $model->name = 'Ситилинк';
-            $model->url = $this->url;
-            $model->save();
+        $client = new Client([
+            'handler' => $stack
+        ]);
+
+        $res = $client->request('GET', $this->url, ['http_errors' => false]);
+
+        if ($res->getStatusCode() === 200) {
+            $exist = Store::findOne(['id' => self::STORE_ID]);
+
+            if (!$exist) {
+                $model = new Store();
+                $model->name = 'Ситилинк';
+                $model->url = $this->url;
+                $model->save();
+            }
+        } else {
+            \Yii::error($res->getStatusCode());
         }
+
+        return $this->render('citilink', ['store' => $res->getStatusCode()]);
 
         // todo: Save more info about store
     }
@@ -59,58 +113,62 @@ class CitilinkController extends Controller
      */
     public function actionCategory()
     {
-        $stack = new HandlerStack();
-        $stack->setHandler(new CurlHandler());
-        $stack->push(Middleware::tor($this->torIp));
+        if (\Yii::$app->request->isPost) {
+            $stack = new HandlerStack();
+            $stack->setHandler(new CurlHandler());
+            $stack->push(Middleware::tor($this->torIp));
 
-        $client = new Client([
-            'base_uri' => "{$this->url}/catalog/",
-            'handler' => $stack
-        ]);
+            $client = new Client([
+                'base_uri' => "{$this->url}/catalog/",
+                'handler' => $stack
+            ]);
 
-        $res = $client->request('GET', "computers_and_notebooks/parts/", ['http_errors' => false]);
+            $res = $client->request('GET', "computers_and_notebooks/parts/", ['http_errors' => false]);
 
-        if ($res->getStatusCode() === 429) {
-           \Yii::error('Think about it');
-        } else if ($res->getStatusCode() === 200) {
-            $body = $res->getBody();
+            if ($res->getStatusCode() === 429) {
+                \Yii::error('Think about it');
+            } else if ($res->getStatusCode() === 200) {
+                $body = $res->getBody();
 
-            $document = \phpQuery::newDocumentHTML($body);
+                $document = \phpQuery::newDocumentHTML($body);
 
-            $categories = $document->find('#content > div > div > div.category-content > span.category-content__link-title');
+                $categories = $document->find('#content > div > div > div.category-content > span.category-content__link-title');
 
-            foreach ($categories as $category) {
-                $pq = pq($category);
+                foreach ($categories as $category) {
+                    $pq = pq($category);
 
-                preg_match_all('!\d+!', $pq->attr('data-category-id'), $matches);
+                    preg_match_all('!\d+!', $pq->attr('data-category-id'), $matches);
 
-                $id = (int)$matches[0][0];
-                if ($id === 100127) {
-                    continue; // skip pc_platform category
+                    $id = (int)$matches[0][0];
+                    if ($id === 100127) {
+                        continue; // skip pc_platform category
+                    }
+                    $title = trim($pq->find('a')->text());
+                    $slug = $pq->find('a')->attr('href');
+
+                    $exist_category = Category::findOne(['unique_id' => $id]);
+
+                    if ($exist_category) {
+                        \Yii::warning(['exist' => $exist_category->id]);
+                    } else {
+                        $model = new Category();
+                        $model->unique_id = $id;
+                        $model->title = $title;
+                        $model->status = 1;
+                        $model->slug = $slug;
+                        $model->save();
+                    }
                 }
-                $title = trim($pq->find('a')->text());
-                $slug = $pq->find('a')->attr('href');
-
-                $exist_category = Category::findOne(['unique_id' => $id]);
-
-                if ($exist_category) {
-                    \Yii::warning(['exist' => $exist_category->id]);
-                } else {
-                    $model = new Category();
-                    $model->unique_id = $id;
-                    $model->title = $title;
-                    $model->status = 1;
-                    $model->slug = $slug;
-                    $model->save();
-                }
+            } else if ($res->getStatusCode() === 301) {
+                \Yii::warning($res->getStatusCode());
+            } else {
+                \Yii::error($res->getStatusCode());
             }
-        } else if ($res->getStatusCode() === 301) {
-            \Yii::warning($res->getStatusCode());
-        } else {
-            \Yii::error($res->getStatusCode());
-        }
 
-        return $this->render('citilink');
+            return $this->render('citilink', ['categories' => $categories]);
+        } else {
+            throw new ForbiddenHttpException();
+        }
     }
 
     /**
@@ -119,165 +177,207 @@ class CitilinkController extends Controller
      */
     public function actionCatalog()
     {
-        $stack = new HandlerStack();
-        $stack->setHandler(new CurlHandler());
-        $stack->push(Middleware::tor($this->torIp));
+        if (\Yii::$app->request->isPost) {
 
-        $categories = Category::find()->all();
+            $request = \Yii::$app->request->post();
 
-        $client = new Client([
-            'handler' => $stack
-        ]);
+            $start = microtime(true);
 
-        foreach ($categories as $category) {
+            $stack = new HandlerStack();
+            $stack->setHandler(new CurlHandler());
+            $stack->push(Middleware::tor($this->torIp));
 
-            $res = $client->request('GET', $category->slug);
-
-            $body = $res->getBody();
-
-            $document = \phpQuery::newDocumentHTML($body);
-
-            $pages_count = (int)$document->find('.page_listing > section > ul > li.last')->text();
-
-            for ($i = 1; $i <= $pages_count; $i++) {
-                self::catalogPages($client, $i, $category->id, $category->slug);
+            if (!empty($request['category_id'])) {
+                $categories = Category::find()->where(['id' => (int)$request['category_id']])->all();
+            } else {
+                $categories = Category::find()->all();
             }
-        }
 
-        return $this->render('citilink');
+            $client = new Client([
+                'base_uri' => "{$this->api}s/{$this->region}/",
+                'handler' => $stack
+            ]);
+
+            /**
+             * get Debug info
+             */
+            $count_iteration = 0;
+            $if429 = 0;
+            $if301 = 0;
+            $saved_product = 0;
+
+            foreach ($categories as $category) {
+                $count_iteration++;
+                $generate_url = str_replace('https://www.citilink.ru/catalog/', '', $category->slug);
+
+                $i = 1;
+                while (true) {
+                    $i++;
+
+                    $api = $client->get("{$generate_url}?page={$i}", [
+                        'http_errors' => false
+                    ]);
+
+                    $response = json_decode($api->getBody(), true);
+
+                    if ($response['code'] === 404 || $response['code'] === 4001) {
+                        break;
+                    }
+
+                    if ($api->getStatusCode() === 429) {
+                        $if429++;
+                        self::changeIpCatalog($category, $client, 60, $generate_url, $i);
+                    } else if ($api->getStatusCode() === 301) {
+                        $if301++;
+                    } else if ($api->getStatusCode() === 200) {
+                        $saved_product++;
+                        self::saveCatalog($category, $response);
+                    } else {
+                        \Yii::error($api->getStatusCode());
+                    }
+                }
+            }
+
+            NotifyEmail::sendParserInfo([
+                'count' => $count_iteration,
+                'if429' => $if429,
+                'if301' => $if301,
+                'saved' => $saved_product,
+                'time' => microtime(true) - $start
+            ]);
+
+            return $this->render('citilink', [
+                'count' => $count_iteration,
+                'if429' => $if429,
+                'if301' => $if301,
+                'saved' => $saved_product,
+                'time' => microtime(true) - $start
+            ]);
+        } else {
+            throw new ForbiddenHttpException();
+        }
     }
 
     /**
      * @return string
      * @use Middleware/Tor
      */
-    public function actionProduct($unique_id = null, $begining_id = null, $limit = null)
+    public function actionProduct()
     {
-        $start = microtime(true);
+        if (\Yii::$app->request->isPost) {
+            $request = \Yii::$app->request->post();
 
-        $stack = new HandlerStack();
-        $stack->setHandler(new CurlHandler());
-        $stack->push(Middleware::tor($this->torIp));
+            $start = microtime(true);
 
-        $client = new Client([
-            'base_uri' => "{$this->api}/{$this->region}/",
-            'handler' => $stack,
-        ]);
+            $stack = new HandlerStack();
+            $stack->setHandler(new CurlHandler());
+            $stack->push(Middleware::tor($this->torIp));
 
-        $sleeping_time = 60;
-
-        if ($limit) {
-            $products = Product::find()->limit((int)$limit)->all();
-        } else if ($unique_id) {
-            $products = Product::find()->where(['unique_id' => (int)$unique_id])->all();
-        } else if ($begining_id) {
-            $products = Product::find()->where(['>', 'id' => $begining_id])->orderBy('id')->all();
-        } else if ($begining_id && $limit) {
-            $products = Product::find()->where(['>', 'id' => $begining_id])->limit((int)$limit)->orderBy('id')->all();
-        } else {
-            $products = Product::find()->all();
-        }
-
-        /**
-         * get Debug info
-         */
-        $count_iteration = 0;
-        $if429 = 0;
-        $if301 = 0;
-        $saved_product = 0;
-
-        while ($products) {
-
-            $product = array_shift($products);
-
-            $api = $client->get("{$product->unique_id}/", [
-                'http_errors' => false
+            $client = new Client([
+                'base_uri' => "{$this->api}/{$this->region}/",
+                'handler' => $stack,
             ]);
 
-            $count_iteration++;
+            $sleeping_time = 60;
 
-            if ($api->getStatusCode() === 429) {
-                $if429++;
-                self::changeIp($product, $client, $sleeping_time);
-            } else if ($api->getStatusCode() === 301) {
-                $if301++;
-                self::notFoundProduct($product);
-            } else if ($api->getStatusCode() === 200) {
-                $saved_product++;
-                self::saveProduct($product, $api);
+            if (!empty($request['limit']) && empty($request['begining_id'])) {
+                $products = Product::find()->limit((int)$request['limit'])->all();
+            } else if (!empty($request['unique_id'])) {
+                $products = Product::find()->where(['unique_id' => (int)$request['unique_id']])->all();
+            } else if (!empty($request['begining_id'] && empty($request['limit']))) {
+                $products = Product::find()->where(['>', 'id', (int)$request['begining_id']])->orderBy('id')->all();
+            } else if (!empty($request['begining_id']) && !empty($request['limit'])) {
+                $products = Product::find()->where(['>', 'id', (int)$request['begining_id']])->limit((int)$request['limit'])->orderBy('id')->all();
             } else {
-                \Yii::error($api->getStatusCode());
+                $products = Product::find()->all();
             }
-        }
 
-        $time = microtime(true) - $start;
+            /**
+             * get Debug info
+             */
+            $count_iteration = 0;
+            $if429 = 0;
+            $if301 = 0;
+            $saved_product = 0;
 
-        NotifyEmail::sendParserInfo([
-            'count' => $count_iteration,
-            'if429' => $if429,
-            'if301' => $if301,
-            'saved' => $saved_product,
-            'time' => $time
-        ]);
+            while ($products) {
 
-        return $this->render('citilink', [
-            'count' => $count_iteration,
-            'if429' => $if429,
-            'if301' => $if301,
-            'saved' => $saved_product,
-            'time' => $time
-        ]);
-    }
+                $product = array_shift($products);
 
-    private static function catalogPages(Client $client, $page_number, $category_id, $category_slug)
-    {
-        try {
-            $res = $client->request('GET', "{$category_slug}?p={$page_number}");
+                $api = $client->get("{$product->unique_id}/", [
+                    'http_errors' => false
+                ]);
 
-            $body = $res->getBody();
+                $count_iteration++;
 
-            $document = \phpQuery::newDocumentHTML($body);
-
-            $products = $document->find('#subcategoryList > div.product_category_list > div > div.subcategory-product-item');
-
-            foreach ($products as $product) {
-                $pq = pq($product);
-
-                $data = json_decode($pq->attr('data-params'), true);
-
-                $id = (int)$data['id'];
-                $short_title = $data['shortName'];
-                $link = $pq->find('a')->attr('href');
-                $thumbnail = ($pq->find('img')->attr('src')) ? $pq->find('img')->attr('src') : $pq->find('img')->attr('data-src');
-
-                $exists_product = Product::findOne(['unique_id' => $id]);
-
-                if ($exists_product) {
-                    ($exists_product->short_title === $short_title) ?: $exists_product->short_title  = $short_title;
-                    ($exists_product->thumbnail === $thumbnail) ?: $exists_product->thumbnail = $thumbnail;
-                    $exists_product->store_id = self::STORE_ID;
-                    $exists_product->save();
+                if ($api->getStatusCode() === 429) {
+                    $if429++;
+                    self::changeIpProduct($product, $client, $sleeping_time);
+                } else if ($api->getStatusCode() === 301) {
+                    $if301++;
+                    self::notFoundProduct($product);
+                } else if ($api->getStatusCode() === 200) {
+                    $saved_product++;
+                    self::saveProduct($product, $api);
                 } else {
-                    $model = new Product();
-                    $model->unique_id = $id;
-                    $model->short_title = $short_title;
-                    $model->link = $link;
-                    $model->thumbnail = $thumbnail;
-                    $model->category_id = $category_id;
-                    $model->store_id = self::STORE_ID;
-                    $model->status = Product::PRODUCT_STATUS_VALUE_PUBLIC;
-                    $model->save();
-                    $model->validate();
-                    \Yii::error($model->errors);
+                    \Yii::error($api->getStatusCode());
                 }
-
             }
-        } catch (GuzzleException $e) {
-            \Yii::error($e);
+
+            NotifyEmail::sendParserInfo([
+                'count' => $count_iteration,
+                'if429' => $if429,
+                'if301' => $if301,
+                'saved' => $saved_product,
+                'time' => microtime(true) - $start
+            ]);
+
+            return $this->render('citilink', [
+                'count' => $count_iteration,
+                'if429' => $if429,
+                'if301' => $if301,
+                'saved' => $saved_product,
+                'time' => microtime(true) - $start
+            ]);
+        } else {
+            throw new ForbiddenHttpException();
         }
     }
 
-    private static function changeIp(Product $product, Client $client, int $seconds)
+
+
+    /**
+     * Static methods for CRUD
+     *
+     */
+    private static function changeIpCatalog(Category $category, Client $client, int $seconds, $generated_url, int $i)
+    {
+        sleep($seconds);
+
+        $sleeping_time = $seconds * 2;
+
+        if ($sleeping_time > 900) {
+            $sleeping_time = 900;
+        }
+
+        $api = $client->get("{$generated_url}?page={$i}", [
+            'http_errors' => false,
+            'tor_new_identity' => true
+        ]);
+
+        if ($api->getStatusCode() === 429) {
+            self::changeIpCatalog($category, $client, $sleeping_time, $generated_url, $i);
+        } else if ($api->getStatusCode() === 301) {
+
+        } else if ($api->getStatusCode() === 200) {
+            $response = json_decode($api->getBody(), true);
+            self::saveCatalog($category, $response);
+        } else {
+            \Yii::error($api->getStatusCode());
+        }
+    }
+
+    private static function changeIpProduct(Product $product, Client $client, int $seconds)
     {
         sleep($seconds);
 
@@ -293,13 +393,43 @@ class CitilinkController extends Controller
         ]);
 
         if ($api->getStatusCode() === 429) {
-            self::changeIp($product, $client, $sleeping_time);
+            self::changeIpProduct($product, $client, $sleeping_time);
         } else if ($api->getStatusCode() === 301) {
             self::notFoundProduct($product);
         } else if ($api->getStatusCode() === 200) {
             self::saveProduct($product, $api);
         } else {
             \Yii::error($api->getStatusCode());
+        }
+    }
+
+    private static function saveCatalog(Category $category, array $response)
+    {
+        $data = $response['data'];
+        $products = $data['items'];
+
+        if (!empty($products)) {
+            foreach ($products as $product) {
+                $exist = Product::findOne(['unique_id' => (int)$product['id']]);
+
+                if (!$exist) {
+                    $model = new Product();
+                    $model->unique_id = (int)$product['id'];
+                    $model->short_title = $product['shortName'];
+                    $model->link = 'https://www.citilink.ru/catalog/' . $product['categoryPath'] . '/' . $product['id'];
+                    $model->thumbnail = $product['imageName'];
+                    $model->category_id = $category->id;
+                    $model->store_id = self::STORE_ID;
+                    $model->status = Product::PRODUCT_STATUS_VALUE_PUBLIC;
+                    $model->save();
+                } else {
+                    $exist->thumbnail = $product['imageName'];
+                    $exist->short_title = $product['shortName'];
+                    $exist->link = 'https://www.citilink.ru/catalog/' . $product['categoryPath'] . '/' . $exist->unique_id;
+                    $exist->save();
+                }
+            }
+
         }
     }
 
@@ -311,7 +441,6 @@ class CitilinkController extends Controller
         self::saveStock($response);
 
         if ($existsProduct) {
-            \Yii::warning(['exist' => $product->id]);
             self::updateProduct($product, $response);
             self::updateProductRelations($existsProduct, $response);
             self::updateStockSummary($product, $response);
@@ -342,7 +471,8 @@ class CitilinkController extends Controller
 
             $product->title = $card['name'];
             $product->short_description = $card['shortCard'];
-            $product->brand = $card['brand'];
+            $product->brand = $card['brandName'];
+            $product->status = Product::PRODUCT_STATUS_VALUE_PUBLIC;
             $product->save();
         }
     }
@@ -444,7 +574,8 @@ class CitilinkController extends Controller
         if ($card) {
             $model->title = $card['name'];
             $model->short_description = $card['shortCard'];
-            $model->brand = $card['brand'];
+            $model->brand = $card['brandName'];
+            $model->status = Product::PRODUCT_STATUS_VALUE_PUBLIC;
             $model->save();
         }
     }
@@ -486,26 +617,5 @@ class CitilinkController extends Controller
         \Yii::error(['lost' => $product->id]);
         $product->status = Product::PRODUCT_STATUS_VALUE_ARCHIVE;
         $product->save();
-    }
-
-    public function actionTest()
-    {
-        $stack = new HandlerStack();
-        $stack->setHandler(new CurlHandler());
-        $stack->push(Middleware::tor('127.0.0.1:9150'));
-
-        $client = new Client(['base_uri' => 'https://api.citilink.ru/v1/product/msk_cl:/', 'handler' => $stack]);
-
-        $id = '1068556';
-
-        $response = $client->get("{$id}/", [
-            'tor_new_identity' => true
-        ]);
-
-        //var_dump($response->getStatusCode());
-        echo $response->getBody();
-
-        return $this->render('citilink');
-
     }
 }

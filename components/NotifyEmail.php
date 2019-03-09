@@ -35,7 +35,7 @@ class NotifyEmail extends \yii\base\Component
         ], ['data' => $data])
             ->setTo('magervlad@yandex.ru')
             ->setFrom($sender)
-            ->setSubject('Parser Info')
+            ->setSubject('Parser Info: Парсинг продуктов успешно завершен')
             ->send();
     }
 }

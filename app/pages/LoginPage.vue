@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="container">
 
         <div v-if="is_logged_in">
             <h1>User was successfully logged in. Found user id {{current_user}}</h1>

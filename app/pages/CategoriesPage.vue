@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div class="container">
         <h1>Categories</h1>
 
         <div v-for="category in categories">
