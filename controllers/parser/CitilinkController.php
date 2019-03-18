@@ -30,7 +30,7 @@ use yii\web\ForbiddenHttpException;
 
 class CitilinkController extends Controller
 {
-    const STORE_ID = 1;
+    const STORE_ID = Store::CITILINK;
 
     private $url = 'https://www.citilink.ru';
 

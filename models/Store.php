@@ -17,6 +17,9 @@ use Yii;
  */
 class Store extends \yii\db\ActiveRecord
 {
+    const CITILINK = 1;
+    const REGARD = 2;
+
     /**
      * {@inheritdoc}
      */
