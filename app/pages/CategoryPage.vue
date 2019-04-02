@@ -3,8 +3,8 @@
         <h1>Category</h1>
 
         <div v-for="product in products">
-            <h2>{{ product.short_title }}</h2>
-            <img :src="product.thumbnail" alt="">
+            <h2><router-link :to="{ name: 'product', params: { id: product.id } }">{{ product.short_title }}</router-link></h2>
+            <!--<img :src="product.thumbnail" alt="">-->
             <ins>{{ product.regular_price }}</ins>
             <del>{{ product.sale_price }}</del>
         </div>
@@ -13,6 +13,7 @@
 
 <script>
     export default {
+        name: 'CategoryPage',
         data() {
             return {
                 products: []

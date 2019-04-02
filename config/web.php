@@ -60,7 +60,8 @@ $config = [
                 '<controller:(\w|-)+>/' => '<controller>/index',
                 '<controller:\w+>/<action:(\w|-)+>/<id:\d+>' => '<controller>/<action>',
                 '<module:\w+>/<controller:\w+>/<action:(\w|-)+>' => '<module>/<controller>/<action>',
-                '<controller:\w+>/<action:(\w|-)+>' => '<controller>/<action>'
+                '<controller:\w+>/<action:[-A-Za-z]+>' => '<controller>/<action>',
+                '<n:.*>' => 'site/index',
             ],
         ]
     ],

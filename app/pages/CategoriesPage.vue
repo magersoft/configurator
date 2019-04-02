@@ -21,7 +21,7 @@
         methods: {
         },
         mounted() {
-            axios('api/categories')
+            axios('/api/categories')
                 .then((response) => {
                     this.categories = response.data;
                 });

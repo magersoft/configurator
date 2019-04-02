@@ -155,6 +155,69 @@ class Product extends \yii\db\ActiveRecord
         return $this->hasMany(PropertyRelations::className(), ['product_id' => 'id']);
     }
 
+    public function getProductApi()
+    {
+        if ($this->status !== self::PRODUCT_STATUS_VALUE_PUBLIC) {
+            return false;
+        }
+
+        return [
+            'title' => $this->title,
+            'short_title' => $this->short_title,
+            'short_description' => $this->short_description,
+            'brand' => $this->brand,
+            'link' => $this->link,
+            'category' => $this->category->title,
+            'thumbnail' => $this->thumbnail,
+            'prices' => $this->getRelationsPrices(),
+            'properties' => $this->getGroupedProperties(),
+            'stocks' => $this->getStock(),
+            'updated_at' => Yii::$app->formatter->asDatetime($this->updated_at),
+        ];
+    }
+
+    public function getRelationsPrices()
+    {
+        $prices = [];
+
+        foreach ($this->productRelations as $productRelation) {
+            $store = $productRelation->store;
+            $prices[$store->name] = [
+              'regular_price' => $productRelation->regular_price,
+              'sale_price' => $productRelation->sale_price,
+              'club_price' => $productRelation->club_price,
+            ];
+        }
+
+        return $prices;
+    }
+
+    public function getStock()
+    {
+        $stocks = [];
+
+        foreach ($this->productStocks as $productStock) {
+            $stock = $productStock->stock;
+            $stocks[$stock->name] = $productStock->count;
+        }
+
+        return $stocks;
+    }
+
+    public function getGroupedProperties()
+    {
+        $groupProperties = [];
+
+        foreach ($this->propertyRelations as $propertyRelation) {
+            $propertyValue = $propertyRelation->value;
+            $property = $propertyRelation->property;
+            $group = $property->group;
+            $groupProperties[$group->name][$property->name] = $propertyValue;
+        }
+
+        return $groupProperties;
+    }
+
     /**
      * {@inheritdoc}
      * @return ProductQuery the active query used by this AR class.

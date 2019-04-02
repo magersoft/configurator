@@ -5,6 +5,8 @@ namespace app\controllers;
 use app\models\Category;
 use app\models\Product;
 use app\models\ProductRelations;
+use app\models\Property;
+use app\models\PropertyGroup;
 use app\models\PropertyRelations;
 use Yii;
 use yii\web\Controller;
@@ -83,13 +85,27 @@ class ApiController extends Controller
             $productRelations = ProductRelations::findOne(['product_id' => $product->id]);
 
             $result[] = [
+                'id' => $product->id,
                 'short_title' => $product->short_title,
                 'thumbnail' => $product->thumbnail,
                 'regular_price' => $productRelations->regular_price,
                 'sale_price' => $productRelations->sale_price,
                 'club_price' => $productRelations->club_price,
+                'property' => []
             ];
         }
         return $result;
+    }
+
+    public function actionProduct()
+    {
+        $id = Yii::$app->request->post('id');
+
+        $product = Product::find()
+                ->where(['id' => $id])
+                ->with('productRelations', 'propertyRelations')
+                ->one();
+
+        return ['product' => $product->getProductApi()];
     }
 }
