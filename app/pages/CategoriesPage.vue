@@ -1,7 +1,6 @@
 <template>
     <div class="container">
         <h1>Categories</h1>
-
         <div v-for="category in categories">
             <router-link :to="{ name: 'category', params: { id: category.id } }">{{ category.title }}</router-link>
         </div>

@@ -74,9 +74,10 @@ class ApiController extends Controller
 
     public function actionProducts()
     {
-        $id = Yii::$app->request->post('id');
+        $request = Yii::$app->request->post();
+
         $products = Product::find()
-            ->where(['category_id' => $id])
+            ->where($request)
             ->with('productRelations')
             ->all();
         $result = [];
@@ -99,10 +100,10 @@ class ApiController extends Controller
 
     public function actionProduct()
     {
-        $id = Yii::$app->request->post('id');
+        $request = Yii::$app->request->post();
 
         $product = Product::find()
-                ->where(['id' => $id])
+                ->where($request)
                 ->with('productRelations', 'propertyRelations')
                 ->one();
 

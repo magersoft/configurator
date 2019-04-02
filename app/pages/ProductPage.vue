@@ -1,6 +1,7 @@
 <template>
     <div class="container">
         <h2>{{ product.title }} <br><small>{{ product.short_title }}</small></h2>
+        <p>{{ product.thumbnail }}</p>
         <p>{{ product.short_description }}</p>
         <p>Brand: {{ product.brand }}</p>
         <p>Category: {{ product.category }}</p>
@@ -19,10 +20,15 @@
         <h3>Properties</h3>
         <div v-for="(property, group) of product.properties">
             <h4>{{ group }}</h4>
-            <ul v-for="(item, value) of property">
+            <ul v-for="(value, item) of property">
                <li>{{ item }}: <strong>{{ value }}</strong></li>
             </ul>
         </div>
+        <hr>
+        <h3>Stocks</h3>
+        <ul v-for="(count, name) of product.stocks">
+           <li>{{ name }} - {{ count }}</li>
+        </ul>
     </div>
 </template>
 
