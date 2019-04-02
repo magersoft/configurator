@@ -170,22 +170,23 @@ class Product extends \yii\db\ActiveRecord
             'category' => $this->category->title,
             'thumbnail' => $this->thumbnail,
             'prices' => $this->getRelationsPrices(),
+            'pricesFormatted' => $this->getRelationsPrices(true),
             'properties' => $this->getGroupedProperties(),
             'stocks' => $this->getStock(),
             'updated_at' => Yii::$app->formatter->asDatetime($this->updated_at),
         ];
     }
 
-    public function getRelationsPrices()
+    public function getRelationsPrices($formatted = false)
     {
         $prices = [];
 
         foreach ($this->productRelations as $productRelation) {
             $store = $productRelation->store;
             $prices[$store->name] = [
-              'regular_price' => $productRelation->regular_price,
-              'sale_price' => $productRelation->sale_price,
-              'club_price' => $productRelation->club_price,
+              'regular_price' => ($formatted) ? Yii::$app->formatter->asCurrency($productRelation->regular_price) : $productRelation->regular_price,
+              'sale_price' => ($formatted) ? Yii::$app->formatter->asCurrency($productRelation->sale_price) : $productRelation->sale_price,
+              'club_price' => ($formatted) ? Yii::$app->formatter->asCurrency($productRelation->club_price) : $productRelation->club_price,
             ];
         }
 
