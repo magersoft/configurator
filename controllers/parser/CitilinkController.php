@@ -12,6 +12,7 @@ namespace app\controllers\parser;
 use app\components\NotifyEmail;
 use app\models\Category;
 use app\models\Product;
+use app\models\ProductMedia;
 use app\models\ProductRelations;
 use app\models\ProductStock;
 use app\models\Property;
@@ -101,6 +102,12 @@ class CitilinkController extends Controller
         } else {
             \Yii::error($res->getStatusCode());
         }
+
+        if (!is_dir('./uploads')) {
+            mkdir('./uploads', 0777, true);
+        }
+
+        self::saveImage('https://static.citilink.ru/media/global/logo.png', 'citilink.png');
 
         return $this->render('citilink', ['store' => $res->getStatusCode()]);
 
@@ -344,8 +351,6 @@ class CitilinkController extends Controller
         }
     }
 
-
-
     /**
      * Static methods for CRUD
      *
@@ -444,10 +449,12 @@ class CitilinkController extends Controller
             self::updateProduct($product, $response);
             self::updateProductRelations($existsProduct, $response);
             self::updateStockSummary($product, $response);
+            self::saveProductImage($product, $response);
         } else {
             self::saveProductRelations($product, $response);
             self::savePropertyGroup($product, $response);
             self::saveStockSummary($product, $response);
+            self::saveProductImage($product, $response);
         }
     }
 
@@ -456,7 +463,6 @@ class CitilinkController extends Controller
         $data = $response['data'];
         $card = $data['card'];
         // todo: for future private methods
-        $photos = $data['photos'];
         $deliveryInfo = $data['deliveryInfo'];
         $mainProperties = $data['mainProperties'];
 
@@ -566,6 +572,31 @@ class CitilinkController extends Controller
         }
     }
 
+    private static function saveProductImage(Product $product, array $response)
+    {
+        $data = $response['data'];
+        $photo = $data['card']['photo'];
+
+        if ($photo) {
+            $exist = ProductMedia::findOne([
+                'product_id' => $product->id,
+                'url' => $photo['baseUrl'],
+            ]);
+
+            if (!$exist) {
+                $model = new ProductMedia();
+                $model->product_id = $product->id;
+                $model->url = $photo['baseUrl'];
+                $model->sm_image = $photo['s'];
+                $model->bg_image = $photo['b'];
+                $model->save();
+            }
+
+            self::saveImage($photo['baseUrl'].$photo['s'], $photo['s']);
+            self::saveImage($photo['baseUrl'].$photo['b'], $photo['b']);
+        }
+    }
+
     private static function updateProduct(Product $model, array $response)
     {
         $data = $response['data'];
@@ -617,5 +648,14 @@ class CitilinkController extends Controller
         \Yii::error(['lost' => $product->id]);
         $product->status = Product::PRODUCT_STATUS_VALUE_ARCHIVE;
         $product->save();
+    }
+
+    private static function saveImage($url, $path)
+    {
+        $filename = './uploads/' . $path;
+        if (file_exists($filename)) {
+            return;
+        }
+        file_put_contents($filename, file_get_contents($url));
     }
 }

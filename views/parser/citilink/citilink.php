@@ -28,7 +28,7 @@ $categories = $categories ?? null;
     <h1>Парсер</h1>
     <br>
     <a href="https://www.citilink.ru/">
-        <img src="https://static.citilink.ru/media/global/logo.png" alt="">
+        <img src="/uploads/citilink.png" alt="">
     </a>
     <br>
     <?php if ($product_count) : ?>

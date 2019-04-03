@@ -7,7 +7,7 @@
         </div>
         <div v-for="product in products">
             <h2><router-link :to="{ name: 'product', params: { id: product.id } }">{{ product.short_title }}</router-link></h2>
-            <!--<img :src="product.thumbnail" alt="">-->
+            <img :src="product.thumbnail" alt="">
             <ins>{{ product.regular_price }}</ins>
             <del>{{ product.sale_price }}</del>
         </div>

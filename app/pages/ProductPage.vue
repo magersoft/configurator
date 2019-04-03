@@ -1,7 +1,7 @@
 <template>
     <div class="container">
         <h2>{{ product.title }} <br><small>{{ product.short_title }}</small></h2>
-        <p>{{ product.thumbnail }}</p>
+        <img :src="product.thumbnail" alt="">
         <p>{{ product.short_description }}</p>
         <p>Brand: {{ product.brand }}</p>
         <p>Category: {{ product.category }}</p>

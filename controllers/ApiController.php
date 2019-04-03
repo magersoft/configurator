@@ -88,7 +88,7 @@ class ApiController extends Controller
             $result[] = [
                 'id' => $product->id,
                 'short_title' => $product->short_title,
-                'thumbnail' => $product->thumbnail,
+                'thumbnail' => '/uploads/'.$product->thumbnail,
                 'regular_price' => $productRelations->regular_price,
                 'sale_price' => $productRelations->sale_price,
                 'club_price' => $productRelations->club_price,

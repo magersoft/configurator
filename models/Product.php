@@ -2,7 +2,6 @@
 
 namespace app\models;
 
-use lhs\Yii2SaveRelationsBehavior\SaveRelationsBehavior;
 use Yii;
 use yii\behaviors\TimestampBehavior;
 
@@ -31,6 +30,7 @@ use yii\behaviors\TimestampBehavior;
  * @property ProductRelations[] $productRelations
  * @property ProductStock[] $productStocks
  * @property PropertyRelations[] $propertyRelations
+ * @property ProductMedia[] $productMedia
  */
 class Product extends \yii\db\ActiveRecord
 {
@@ -155,6 +155,14 @@ class Product extends \yii\db\ActiveRecord
         return $this->hasMany(PropertyRelations::className(), ['product_id' => 'id']);
     }
 
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getProductMedia()
+    {
+        return $this->hasMany(ProductMedia::className(), ['product_id' => 'id']);
+    }
+
     public function getProductApi()
     {
         if ($this->status !== self::PRODUCT_STATUS_VALUE_PUBLIC) {
@@ -168,7 +176,7 @@ class Product extends \yii\db\ActiveRecord
             'brand' => $this->brand,
             'link' => $this->link,
             'category' => $this->category->title,
-            'thumbnail' => $this->thumbnail,
+            'thumbnail' => $this->getThumbnail(),
             'prices' => $this->getRelationsPrices(),
             'pricesFormatted' => $this->getRelationsPrices(true),
             'properties' => $this->getGroupedProperties(),
@@ -217,6 +225,11 @@ class Product extends \yii\db\ActiveRecord
         }
 
         return $groupProperties;
+    }
+
+    public function getThumbnail()
+    {
+        return '/uploads/'.$this->thumbnail;
     }
 
     /**
