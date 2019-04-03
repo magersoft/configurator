@@ -5,47 +5,59 @@
             <button @click="getAMD">AMD</button>
             <button @click="getIntel">INTEL</button>
         </div>
-        <div v-for="product in products">
-            <h2><router-link :to="{ name: 'product', params: { id: product.id } }">{{ product.short_title }}</router-link></h2>
-            <img :src="product.thumbnail" alt="">
-            <ins>{{ product.regular_price }}</ins>
-            <del>{{ product.sale_price }}</del>
+        <div v-if="products.length === 0">Loading ...</div>
+        <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+            <div v-for="product in products">
+                <h2><router-link :to="{ name: 'product', params: { id: product.id } }">{{ product.short_title }}</router-link></h2>
+                <img :src="product.thumbnail" alt="">
+                <ins>{{ product.regular_price }}</ins>
+                <del>{{ product.sale_price }}</del>
+            </div>
         </div>
     </div>
 </template>
 
 <script>
     export default {
-        name: 'CategoryPage',
         data() {
             return {
-                products: []
+                busy: false,
+                products: [],
+                nextPage: `/api/products?category_id=${this.$route.params.id}`
             }
-        },
-        computed: {
-
         },
         methods: {
+            loadMore() {
+                if (!this.busy && this.nextPage) {
+                    this.busy = true;
+
+                    axios.get(this.nextPage)
+                        .then(response => {
+                            this.products.push(...response.data.result);
+                            this.nextPage = response.data.pagination.next || null;
+                            this.busy = false;
+                        });
+                }
+            },
             getAMD() {
-                axios.post('/api/products', { brand: 'AMD' })
-                    .then((response) => {
-                        this.products = response.data;
-                    })
+                axios.get('/api/products', {
+                    params: { brand: 'AMD' }
+                }).then(response => {
+                    this.products = response.data.result;
+                    this.nextPage = response.data.pagination.next || null;
+                    this.busy = false;
+                })
             },
             getIntel() {
-                axios.post('/api/products', { brand: 'INTEL' })
-                    .then((response) => {
-                        this.products = response.data;
-                    })
+                axios.get('/api/products', {
+                    params: { brand: 'INTEL' }
+                }).then(response => {
+                    this.products = response.data.result;
+                    this.nextPage = response.data.pagination.next || null;
+                    this.busy = false;
+                })
             }
         },
-        mounted() {
-            console.log(this.$route.params.id);
-            axios.post('/api/products', { category_id: this.$route.params.id })
-                .then((response) => {
-                    this.products = response.data;
-                })
-        }
     }
 </script>
 

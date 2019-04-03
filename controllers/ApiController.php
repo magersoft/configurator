@@ -9,7 +9,8 @@ use app\models\Property;
 use app\models\PropertyGroup;
 use app\models\PropertyRelations;
 use Yii;
-use yii\web\Controller;
+use yii\data\ActiveDataProvider;
+use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
@@ -74,28 +75,27 @@ class ApiController extends Controller
 
     public function actionProducts()
     {
-        $request = Yii::$app->request->post();
+        $request = Yii::$app->request->get();
+        unset($request['page']);
 
         $products = Product::find()
             ->where($request)
-            ->with('productRelations')
-            ->all();
+            ->with('productRelations');
+        $products = new ActiveDataProvider(['query' => $products]);
+//        return $products;
         $result = [];
-        foreach ($products as $product) {
-
-            $productRelations = ProductRelations::findOne(['product_id' => $product->id]);
-
+        foreach ($products->getModels() as $product) {
             $result[] = [
                 'id' => $product->id,
                 'short_title' => $product->short_title,
                 'thumbnail' => '/uploads/'.$product->thumbnail,
-                'regular_price' => $productRelations->regular_price,
-                'sale_price' => $productRelations->sale_price,
-                'club_price' => $productRelations->club_price,
+                'regular_price' => $product->productRelations[0]->regular_price,
+                'sale_price' => $product->productRelations[0]->sale_price,
+                'club_price' => $product->productRelations[0]->club_price,
                 'property' => []
             ];
         }
-        return $result;
+        return ['result' => $result, 'pagination' => $products->getPagination()->getLinks()];
     }
 
     public function actionProduct()
