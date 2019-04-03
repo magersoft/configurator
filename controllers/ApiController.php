@@ -10,6 +10,7 @@ use app\models\PropertyGroup;
 use app\models\PropertyRelations;
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\db\Query;
 use yii\rest\Controller;
 use yii\web\Response;
 use yii\filters\VerbFilter;
@@ -76,19 +77,28 @@ class ApiController extends Controller
     public function actionProducts()
     {
         $request = Yii::$app->request->get();
+
         unset($request['page']);
 
         $products = Product::find()
-            ->where($request)
             ->with('productRelations');
+            if (isset($request['property_id'])) {
+                $products->andWhere(['in', 'id', (new Query())
+                    ->select('product_id')
+                    ->from('property_relations')
+                    ->where($request)
+                ]);
+            } else {
+                $products->where($request);
+            }
         $products = new ActiveDataProvider(['query' => $products]);
-//        return $products;
+
         $result = [];
         foreach ($products->getModels() as $product) {
             $result[] = [
                 'id' => $product->id,
                 'short_title' => $product->short_title,
-                'thumbnail' => '/uploads/'.$product->thumbnail,
+                'thumbnail' => $product->getThumbnail(),
                 'regular_price' => $product->productRelations[0]->regular_price,
                 'sale_price' => $product->productRelations[0]->sale_price,
                 'club_price' => $product->productRelations[0]->club_price,

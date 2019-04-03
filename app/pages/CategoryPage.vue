@@ -8,8 +8,10 @@
         <div v-if="products.length === 0">Loading ...</div>
         <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
             <div v-for="product in products">
-                <h2><router-link :to="{ name: 'product', params: { id: product.id } }">{{ product.short_title }}</router-link></h2>
-                <img :src="product.thumbnail" alt="">
+                <router-link :to="{ name: 'product', params: { id: product.id } }">
+                    <h2>{{ product.short_title }}</h2>
+                    <img :src="product.thumbnail" alt="">
+                </router-link>
                 <ins>{{ product.regular_price }}</ins>
                 <del>{{ product.sale_price }}</del>
             </div>
