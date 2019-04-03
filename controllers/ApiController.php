@@ -119,4 +119,9 @@ class ApiController extends Controller
 
         return ['product' => $product->getProductApi()];
     }
+
+    public function actionVuex()
+    {
+        return Yii::$app->request->post();
+    }
 }

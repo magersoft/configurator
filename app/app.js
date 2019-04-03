@@ -1,5 +1,11 @@
+import Vue from 'vue';
 import router from './routes.js';
+import {store} from './store/index';
 import infiniteScroll from 'vue-infinite-scroll';
+
+require('./bootstrap');
+
+Vue.use(infiniteScroll);
 
 document.onreadystatechange = function () {
     if (document.readyState === 'interactive') {
@@ -7,20 +13,13 @@ document.onreadystatechange = function () {
     }
 };
 
-require('./bootstrap');
-
-const Vue = require('vue');
-Vue.use(infiniteScroll);
-
 
 const app = new Vue({
     el: '#app',
+    store,
     router,
     data: {
 
-    },
-    directives: {
-      infiniteScroll
     },
     methods: {
         isActiveMenu(path) {

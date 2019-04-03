@@ -1,3 +1,4 @@
+import Vue from 'vue';
 import VueRouter from 'vue-router'
 
 import LandingPage from './pages/LandingPage.vue';
@@ -6,6 +7,8 @@ import LoginPage from './pages/LoginPage.vue';
 import CategoriesPage from './pages/CategoriesPage';
 import CategoryPage from './pages/CategoryPage';
 import ProductPage from './pages/ProductPage';
+
+Vue.use(VueRouter);
 
 let routes = [
     { path: '/', component: LandingPage, name: 'landing'},
