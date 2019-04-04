@@ -52,6 +52,7 @@
     "vue-infinite-scroll": "^2.0.2",
     "vue-router": "^3.0.1",
     "vue-server-renderer": "^2.5.21",
+    "vuelidate": "^0.7.4",
     "vuex": "^3.0.1"
   }
 }

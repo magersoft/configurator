@@ -1,11 +1,14 @@
 import Vue from 'vue';
 import router from './routes.js';
 import {store} from './store/index';
+
 import infiniteScroll from 'vue-infinite-scroll';
+import Vuelidate from 'vuelidate';
 
 require('./bootstrap');
 
 Vue.use(infiniteScroll);
+Vue.use(Vuelidate);
 
 document.onreadystatechange = function () {
     if (document.readyState === 'interactive') {
