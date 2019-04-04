@@ -5,9 +5,17 @@
             <button @click="getAMD">AMD</button>
             <button @click="getIntel">INTEL</button>
         </div>
-        <div v-if="products.length === 0">Loading ...</div>
+        <hr>
+        <div class="row">
+            <div class="form-group col-md-3">
+                <label for="searchProduct" class="control-label">Название продукта</label>
+                <input v-model="searchProduct" type="text" id="searchProduct" class="form-control" placeholder="Начните ввод ...">
+            </div>
+        </div>
+
+        <div v-if="!products.length">Loading ...</div>
         <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
-            <div v-for="product in products">
+            <div v-for="product of searchedProduct">
                 <router-link :to="{ name: 'product', params: { id: product.id } }">
                     <h2>{{ product.short_title }}</h2>
                     <img :src="product.thumbnail" alt="">
@@ -16,6 +24,7 @@
                 <del>{{ product.sale_price }}</del>
             </div>
         </div>
+        <div v-if="!searchedProduct.length">Never not founds</div>
     </div>
 </template>
 
@@ -24,8 +33,18 @@
         data() {
             return {
                 busy: false,
+                searchProduct: [],
                 products: [],
                 nextPage: `/api/products?category_id=${this.$route.params.id}`
+            }
+        },
+        computed: {
+            searchedProduct() {
+                return this.products.filter((product) => {
+                    if (product.short_title.toLowerCase().indexOf(this.searchProduct) !== -1) {
+                        return product;
+                    }
+                })
             }
         },
         methods: {
@@ -43,7 +62,7 @@
             },
             getAMD() {
                 axios.get('/api/products', {
-                    params: { brand: 'AMD' }
+                    params: { category_id: this.$route.params.id, brand: 'AMD' }
                 }).then(response => {
                     this.products = response.data.result;
                     this.nextPage = response.data.pagination.next || null;
@@ -52,7 +71,7 @@
             },
             getIntel() {
                 axios.get('/api/products', {
-                    params: { brand: 'INTEL' }
+                    params: { category_id: this.$route.params.id, brand: 'INTEL' }
                 }).then(response => {
                     this.products = response.data.result;
                     this.nextPage = response.data.pagination.next || null;
