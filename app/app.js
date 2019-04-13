@@ -1,6 +1,6 @@
 import Vue from 'vue';
 import router from './routes.js';
-import {store} from './store/index';
+import {store} from './store';
 
 import infiniteScroll from 'vue-infinite-scroll';
 import Vuelidate from 'vuelidate';

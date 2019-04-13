@@ -33,18 +33,18 @@ AppAsset::register($this);
 
                     <div id="w0-collapse" class="collapse navbar-collapse">
                         <ul id="w1" class="navbar-nav navbar-right nav">
-                            <li :class="{'active' : isActiveMenu('/')}">
-                                <router-link to="/">Home</router-link>
-                            </li>
-                            <li :class="{'active' : isActiveMenu('/about')}">
-                                <router-link to="/about">About</router-link>
-                            </li>
-                            <li :class="{'active' : isActiveMenu('/login')}">
-                                <router-link to="/login">Login</router-link>
-                            </li>
-                            <li :class="{'active' : isActiveMenu('/categories')}">
-                                <router-link to="/categories">Categories</router-link>
-                            </li>
+                            <router-link tag="li" exact to="/" active-class="active">
+                                <a>Home</a>
+                            </router-link>
+                            <router-link tag="li" to="/about" active-class="active">
+                                <a>About</a>
+                            </router-link>
+                            <router-link tag="li" to="/login" active-class="active">
+                                <a>Login</a>
+                            </router-link>
+                            <router-link tag="li" to="/categories" active-class="active">
+                                <a>Categories</a>
+                            </router-link>
                             <li>
                                 <a href="<?= \yii\helpers\Url::to(['parser/citilink/index']) ?>">
                                     Ситилинк

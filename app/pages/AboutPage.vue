@@ -2,7 +2,7 @@
     <div class="container">
         <h1>About page</h1>
         <p>
-            This is the About page. <a :href="url">Google</a>
+            This is the About page.
         </p>
         <form>
             <div class="form-group" :class="{
@@ -39,7 +39,6 @@
 
             <button type="submit" class="btn btn-primary" :disabled="$v.$invalid">Send</button>
         </form>
-
     </div>
 </template>
 
@@ -50,7 +49,8 @@
         data() {
             return {
                 email: '',
-                password: ''
+                password: '',
+                vue: 'test'
             }
         },
         validations: {
@@ -64,7 +64,6 @@
             }
         },
         methods: {
-
         }
     }
 </script>

@@ -15,16 +15,18 @@
 
         <div v-if="!products.length">Loading ...</div>
         <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
-            <div v-for="product of searchedProduct">
+            <div v-for="(product, key) of searchedProduct">
                 <router-link :to="{ name: 'product', params: { id: product.id } }">
                     <h2>{{ product.short_title }}</h2>
                     <img :src="product.thumbnail" alt="">
                 </router-link>
                 <ins>{{ product.regular_price }}</ins>
                 <del>{{ product.sale_price }}</del>
+                <br>
+                <button @click="addProduct(product, $event)" :key="key" class="btn btn-success" style="margin-top: 5px;">Add product</button>
             </div>
         </div>
-        <div v-if="!searchedProduct.length">Never not founds</div>
+        <div v-if="!searchedProduct.length">Nothing not founds</div>
     </div>
 </template>
 
@@ -77,6 +79,11 @@
                     this.nextPage = response.data.pagination.next || null;
                     this.busy = false;
                 })
+            },
+            addProduct(product, event) {
+                this.$store.dispatch('SAVE_PRODUCT', product);
+                event.target.disabled = true;
+                event.target.textContent = 'Added';
             }
         },
     }

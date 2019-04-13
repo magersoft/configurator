@@ -3,6 +3,8 @@
 namespace app\controllers;
 
 use app\models\Category;
+use app\models\Configuration;
+use app\models\ConfigurationRelations;
 use app\models\Product;
 use app\models\ProductRelations;
 use app\models\Property;
@@ -12,6 +14,7 @@ use Yii;
 use yii\data\ActiveDataProvider;
 use yii\db\Query;
 use yii\rest\Controller;
+use yii\web\ForbiddenHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
@@ -38,6 +41,8 @@ class ApiController extends Controller
      */
     public function beforeAction($action)
     {
+        $session = Yii::$app->session;
+        $session->open();
         \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
         return parent::beforeAction($action);
     }
@@ -122,6 +127,47 @@ class ApiController extends Controller
 
     public function actionVuex()
     {
-        return Yii::$app->request->post();
+        if ($request = Yii::$app->request->post()) {
+            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            if (!$configuration) {
+                $configuration = new Configuration();
+                $configuration->token = Yii::$app->session->getId();
+                $configuration->save();
+            }
+            $saveProduct = new ConfigurationRelations();
+            $saveProduct->configuration_id = $configuration->id;
+            $saveProduct->product_id = $request['id'];
+            $saveProduct->save();
+        } else if (Yii::$app->request->isGet) {
+            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            if (!$configuration) {
+                return false;
+            }
+            $products = [];
+            $configRelations = ConfigurationRelations::find()->where(['configuration_id' => $configuration->id])->all();
+            foreach ($configRelations as $relation) {
+                $products[] = [
+                    'id' => $relation->product->id,
+                    'short_title' => $relation->product->short_title,
+                    'thumbnail' => $relation->product->getThumbnail(),
+                    'regular_price' => $relation->product->productRelations[0]->regular_price,
+                    'sale_price' => $relation->product->productRelations[0]->sale_price,
+                    'club_price' => $relation->product->productRelations[0]->club_price,
+                ];
+            }
+            return ['products' => $products];
+        } else if (Yii::$app->request->isDelete) {
+            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            if (!$configuration) {
+                return false;
+            }
+            $removeProduct = ConfigurationRelations::findOne([
+                'configuration_id' => $configuration->id,
+                'product_id' => Yii::$app->request->get()['id']
+            ]);
+            $removeProduct->delete();
+        } else {
+            throw new ForbiddenHttpException();
+        }
     }
 }

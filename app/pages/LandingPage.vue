@@ -1,10 +1,16 @@
 <template>
     <div class="container">
         <!--<canvas id="c"></canvas>-->
-        <div v-for="product of products">
-            {{ product }}
+        <div v-for="(product, key) of products">
+            <router-link :to="{ name: 'product', params: { id: product.id } }">
+                <h2>{{ product.short_title }}</h2>
+                <img :src="product.thumbnail" alt="">
+            </router-link>
+            <ins>{{ product.regular_price }}</ins>
+            <del>{{ product.sale_price }}</del>
+            <br>
+            <button @click="removeProduct(product)" :key="key" class="btn btn-danger">Remove product</button>
         </div>
-        <button @click="addProduct">press</button>
     </div>
 </template>
 
@@ -16,17 +22,22 @@
             }
         },
         methods: {
-          addProduct() {
-              let item = 'Testing Vuex';
-              this.$store.dispatch('SAVE_PRODUCT', item);
-          }
+            removeProduct(product) {
+                this.$store.dispatch('REMOVE_PRODUCT', product)
+            }
+        },
+        created() {
+          console.log('created');
+          console.log(this.$store.getters.PRODUCTS);
         },
         mounted() {
-            console.log(this.$store);
-            // console.log(this.$store.dispatch('GET_PRODUCT'));
+            this.$store.dispatch('GET_PRODUCTS');
+            console.log('mounted');
+            console.log(this.$store.state.products);
         },
         computed: {
             products() {
+                console.log('computed');
                 return this.$store.getters.PRODUCTS;
             }
         }
