@@ -103,6 +103,7 @@ class ApiController extends Controller
             $result[] = [
                 'id' => $product->id,
                 'short_title' => $product->short_title,
+                'short_description' => $product->short_description,
                 'thumbnail' => $product->getThumbnail(),
                 'regular_price' => $product->productRelations[0]->regular_price,
                 'sale_price' => $product->productRelations[0]->sale_price,
@@ -149,6 +150,7 @@ class ApiController extends Controller
                 $products[] = [
                     'id' => $relation->product->id,
                     'short_title' => $relation->product->short_title,
+                    'short_description' => $relation->product->short_description,
                     'thumbnail' => $relation->product->getThumbnail(),
                     'regular_price' => $relation->product->productRelations[0]->regular_price,
                     'sale_price' => $relation->product->productRelations[0]->sale_price,

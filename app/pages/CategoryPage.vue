@@ -12,18 +12,10 @@
                 <input v-model="searchProduct" type="text" id="searchProduct" class="form-control" placeholder="Начните ввод ...">
             </div>
         </div>
-
         <div v-if="!products.length">Loading ...</div>
-        <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+        <div class="row" v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
             <div v-for="(product, key) of searchedProduct">
-                <router-link :to="{ name: 'product', params: { id: product.id } }">
-                    <h2>{{ product.short_title }}</h2>
-                    <img :src="product.thumbnail" alt="">
-                </router-link>
-                <ins>{{ product.regular_price }}</ins>
-                <del>{{ product.sale_price }}</del>
-                <br>
-                <button @click="addProduct(product, $event)" :key="key" class="btn btn-success" style="margin-top: 5px;">Add product</button>
+                <product-card :product="product"></product-card>
             </div>
         </div>
         <div v-if="!searchedProduct.length">Nothing not founds</div>
@@ -31,6 +23,7 @@
 </template>
 
 <script>
+    import ProductCard from '../components/ProductCard';
     export default {
         data() {
             return {
@@ -40,6 +33,9 @@
                 nextPage: `/api/products?category_id=${this.$route.params.id}`
             }
         },
+        components: {
+          ProductCard
+        },
         computed: {
             searchedProduct() {
                 return this.products.filter((product) => {
@@ -48,6 +44,9 @@
                     }
                 })
             }
+        },
+        mounted() {
+            this.$store.dispatch('GET_PRODUCTS');
         },
         methods: {
             loadMore() {
@@ -80,11 +79,6 @@
                     this.busy = false;
                 })
             },
-            addProduct(product, event) {
-                this.$store.dispatch('SAVE_PRODUCT', product);
-                event.target.disabled = true;
-                event.target.textContent = 'Added';
-            }
         },
     }
 </script>
