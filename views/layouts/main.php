@@ -46,7 +46,12 @@ AppAsset::register($this);
                                 <a>Categories</a>
                             </router-link>
                             <li>
-                                <a href="<?= \yii\helpers\Url::to(['parser/citilink/index']) ?>">
+                                <a href="<?= \yii\helpers\Url::to(['/user/login']) ?>">
+                                    Yii2 Login
+                                </a>
+                            </li>
+                            <li>
+                                <a href="<?= \yii\helpers\Url::to(['/parser/citilink/index']) ?>">
                                     Ситилинк
                                 </a>
                             </li>

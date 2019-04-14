@@ -20,10 +20,6 @@ $config = [
         'cache' => [
             'class' => 'yii\caching\FileCache',
         ],
-        'user' => [
-            'identityClass' => 'app\models\User',
-            'enableAutoLogin' => true,
-        ],
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
@@ -65,7 +61,7 @@ $config = [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
-                '<controller:(about|login|categories)>' => 'site/index',
+                '<controller:(about|login|categories|registration)>' => 'site/index',
                 '<controller:(\w|-)+>/' => '<controller>/index',
                 '<controller:\w+>/<action:(\w|-)+>/<id:\d+>' => '<controller>/<action>',
                 '<module:\w+>/<controller:\w+>/<action:(\w|-)+>' => '<module>/<controller>/<action>',
@@ -75,6 +71,12 @@ $config = [
         ]
     ],
     'params' => $params,
+    'modules' => [
+        'user' => [
+            'class' => 'dektrium\user\Module',
+            'admins' => ['magervlad@yandex.ru'],
+        ]
+    ]
 ];
 if (YII_ENV_DEV) {
     // configuration adjustments for 'dev' environment
