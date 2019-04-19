@@ -1,10 +1,11 @@
 <template>
-    <div class="container">
-        <!--<canvas id="c"></canvas>-->
-        <div v-for="(product, key) of products">
-            <product-card :product="product" for-config></product-card>
-        </div>
-    </div>
+    <v-container grid-list-md text-xs-center>
+        <v-layout row wrap>
+            <v-flex xs3 v-for="(product, key) of products">
+                <product-card :product="product" for-config></product-card>
+            </v-flex>
+        </v-layout>
+    </v-container>
 </template>
 
 <script>

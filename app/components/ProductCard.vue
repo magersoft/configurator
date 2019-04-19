@@ -1,6 +1,6 @@
 <template>
-    <div class="col-sm-6 col-md-4">
-        <div class="thumbnail" style="height: 350px">
+    <v-card>
+        <div class="thumbnail">
             <router-link :to="{ name: 'product', params: { id: product.id } }">
                 <img :src="product.thumbnail" alt="..." style="height: 100px">
             </router-link>
@@ -10,27 +10,27 @@
                 <p><ins>{{ product.regular_price }}</ins></p>
                 <p><del>{{ product.sale_price }}</del></p>
                 <p>
-                    <button
-                            v-if="!forConfig"
-                            :disabled="addedProduct(product)"
-                            :class="{ 'btn-default': addedProduct(product), 'btn-primary': !addedProduct(product) }"
-                            @click="addProduct(product, $event)"
-                            class="btn"
+                    <v-btn
+                        v-if="!forConfig"
+                        :disabled="addedProduct(product)"
+                        :class="{ 'btn-default': addedProduct(product), 'btn-primary': !addedProduct(product) }"
+                        @click="addProduct(product, $event)"
+                        color="info"
                     >
                         {{ addedProduct(product) ? 'Added Product' : 'Add Product' }}
-                    </button>
-                    <button
-                            v-if="forConfig"
-                            @click="removeProduct(product)"
-                            class="btn btn-danger"
+                    </v-btn>
+                    <v-btn
+                        v-if="forConfig"
+                        @click="removeProduct(product)"
+                        color="error"
                     >
                         Remove Product
-                    </button>
-                    <router-link tag="button" :to="{ name: 'product', params: { id: product.id } }" class="btn btn-default">More info</router-link>
+                    </v-btn>
+                    <v-btn color="info" flat :to="{ name: 'product', params: { id: product.id } }">More info</v-btn>
                 </p>
             </div>
         </div>
-    </div>
+    </v-card>
 </template>
 
 <script>

@@ -1,5 +1,5 @@
 <template>
-    <div class="container">
+    <v-container grid-list-md text-xs-center>
         <h1>Category</h1>
         <div v-if="this.$route.params.id == 67">
             <button @click="getAMD">AMD</button>
@@ -13,13 +13,15 @@
             </div>
         </div>
         <div v-if="!products.length">Loading ...</div>
-        <div class="row" v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
-            <div v-for="(product, key) of searchedProduct">
-                <product-card :product="product"></product-card>
-            </div>
+        <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+            <v-layout row wrap>
+                <v-flex xs3 v-for="(product, key) of searchedProduct">
+                    <product-card :product="product"></product-card>
+                </v-flex>
+            </v-layout>
         </div>
         <div v-if="!searchedProduct.length">Nothing not founds</div>
-    </div>
+    </v-container>
 </template>
 
 <script>

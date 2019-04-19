@@ -6,6 +6,8 @@ use yii\web\Controller;
 
 class SiteController extends Controller
 {
+    public $layout = 'app';
+
     /**
      * {@inheritdoc}
      */
