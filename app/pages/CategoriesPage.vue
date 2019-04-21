@@ -1,10 +1,23 @@
 <template>
-    <div class="container">
+    <v-container>
         <h1>Categories</h1>
-        <div v-for="category in categories">
-            <router-link :to="{ name: 'category', params: { id: category.id } }">{{ category.title }}</router-link>
-        </div>
-    </div>
+
+        <v-list>
+            <v-list-tile
+                    v-for="category in categories"
+                    :key="category.title"
+                    :to="{ name: 'category', params: { id: category.id } }"
+            >
+                <v-list-tile-action>
+<!--                    <v-icon>{{ item.icon }}</v-icon>-->
+                </v-list-tile-action>
+
+                <v-list-tile-content>
+                    <v-list-tile-title>{{ category.title }}</v-list-tile-title>
+                </v-list-tile-content>
+            </v-list-tile>
+        </v-list>
+    </v-container>
 </template>
 
 <script>

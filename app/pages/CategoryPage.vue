@@ -15,7 +15,7 @@
         <div v-if="!products.length">Loading ...</div>
         <div v-infinite-scroll="loadMore" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
             <v-layout row wrap>
-                <v-flex xs3 v-for="(product, key) of searchedProduct">
+                <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of searchedProduct">
                     <product-card :product="product"></product-card>
                 </v-flex>
             </v-layout>
