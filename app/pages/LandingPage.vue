@@ -1,7 +1,7 @@
 <template>
     <v-container grid-list-md text-xs-center>
         <v-layout row wrap>
-            <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of products">
+            <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of products" :key="key">
                 <product-card :product="product" for-config></product-card>
             </v-flex>
         </v-layout>

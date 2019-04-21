@@ -1,35 +1,38 @@
 <template>
-    <v-card>
-        <div class="thumbnail">
-            <router-link :to="{ name: 'product', params: { id: product.id } }">
-                <img :src="product.thumbnail" alt="..." style="height: 100px">
-            </router-link>
-            <div class="caption">
-                <h4>{{ product.short_title }}</h4>
-                <p style="font-size: 10px;">{{ product.short_description }}</p>
-                <p><ins>{{ product.regular_price }}</ins></p>
-                <p><del>{{ product.sale_price }}</del></p>
-                <p>
-                    <v-btn
-                        v-if="!forConfig"
-                        :disabled="addedProduct(product)"
-                        :class="{ 'btn-default': addedProduct(product), 'btn-primary': !addedProduct(product) }"
-                        @click="addProduct(product, $event)"
-                        color="info"
-                    >
-                        {{ addedProduct(product) ? 'Added Product' : 'Add Product' }}
-                    </v-btn>
-                    <v-btn
-                        v-if="forConfig"
-                        @click="removeProduct(product)"
-                        color="error"
-                    >
-                        Remove Product
-                    </v-btn>
-                    <v-btn color="info" flat :to="{ name: 'product', params: { id: product.id } }">More info</v-btn>
-                </p>
+    <v-card class="product-card">
+        <router-link :to="{ name: 'product', params: { id: product.id } }">
+            <v-img :src="product.thumbnail" :lazy-src="product.thumbnail" aspect-ratio="1"></v-img>
+        </router-link>
+
+        <v-card-title primary-title>
+            <h3 class="product-card_title">{{ product.short_title }}</h3>
+            <div class="product-card_description">
+                {{ product.short_description }}
             </div>
-        </div>
+            <div class="product-card_price">
+                <ins>{{ product.regular_price }}</ins>
+                <del v-if="product.sale_price > 0">{{ product.sale_price }}</del>
+            </div>
+        </v-card-title>
+        <v-card-actions>
+            <v-btn
+                    v-if="!forConfig"
+                    :disabled="addedProduct(product)"
+                    :class="{ 'btn-default': addedProduct(product), 'btn-primary': !addedProduct(product) }"
+                    @click="addProduct(product, $event)"
+                    color="info"
+            >
+                {{ addedProduct(product) ? 'Added Product' : 'Add Product' }}
+            </v-btn>
+            <v-btn
+                    v-if="forConfig"
+                    @click="removeProduct(product)"
+                    color="error"
+            >
+                Remove Product
+            </v-btn>
+            <v-btn color="info" flat :to="{ name: 'product', params: { id: product.id } }">More info</v-btn>
+        </v-card-actions>
     </v-card>
 </template>
 
@@ -62,6 +65,26 @@
     }
 </script>
 
-<style scoped>
-
+<style lang="scss" scoped>
+.product-card {
+    &_title {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    &_description {
+        height: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+        margin: 10px 0;
+        font-size: 12px;
+    }
+    &_price {
+        ins {
+            font-size: 22px;
+            text-decoration: none;
+        }
+    }
+}
 </style>

@@ -6,7 +6,6 @@ import components from './components'
 
 import infiniteScroll from 'vue-infinite-scroll';
 import Vuelidate from 'vuelidate';
-import 'vuetify/dist/vuetify.min.css';
 
 require('./bootstrap');
 

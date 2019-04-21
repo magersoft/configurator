@@ -28,23 +28,11 @@ AdminAsset::register($this);
             <nav id="w0" class="navbar-inverse navbar-fixed-top navbar">
                 <div class="container">
                     <div class="navbar-header">
-                        <router-link to="/" class="navbar-brand">My Application</router-link>
+                        <a href="/" class="navbar-brand">My Application</a>
                     </div>
 
                     <div id="w0-collapse" class="collapse navbar-collapse">
                         <ul id="w1" class="navbar-nav navbar-right nav">
-                            <router-link tag="li" exact to="/" active-class="active">
-                                <a>Home</a>
-                            </router-link>
-                            <router-link tag="li" to="/about" active-class="active">
-                                <a>About</a>
-                            </router-link>
-                            <router-link tag="li" to="/login" active-class="active">
-                                <a>Login</a>
-                            </router-link>
-                            <router-link tag="li" to="/categories" active-class="active">
-                                <a>Categories</a>
-                            </router-link>
                             <li>
                                 <a href="<?= \yii\helpers\Url::to(['/user/login']) ?>">
                                     Yii2 Login
@@ -60,13 +48,8 @@ AdminAsset::register($this);
                 </div>
             </nav>
         </div>
-        <transition>
-            <router-view></router-view>
-        </transition>
-        <div v-if="this.$route.matched.length == 0">
-            <div class="container" style="padding-top: 50px;">
-                <?= $content ?>
-            </div>
+        <div class="container" style="padding-top: 50px;">
+            <?= $content ?>
         </div>
     </div>
 

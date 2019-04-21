@@ -3,7 +3,10 @@
 // Include all dependency partials
 
 //=== Main configuration file
-@import "assets/sass/config";
+// @import "assets/sass/config";
+
+//=== Vuetify
+@import "~vuetify/dist/vuetify.css";
 
 //=== All components
 @import "assets/sass/components/include";

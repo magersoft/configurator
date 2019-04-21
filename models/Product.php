@@ -229,12 +229,12 @@ class Product extends \yii\db\ActiveRecord
 
     public function getThumbnail()
     {
-        $path = './uploads/'.$this->thumbnail;
+        $path = './uploads/'.$this->productMedia[0]->bg_image;
 
         if (!$this->thumbnail || !file_exists($path) || !filesize($path)) {
             return '/images/placeholder.jpg';
         }
-        return '/uploads/'.$this->thumbnail;
+        return '/uploads/'.$this->productMedia[0]->bg_image;
     }
 
     /**

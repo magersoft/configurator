@@ -3,13 +3,14 @@
 //
 
 //== Normalize document and reset elements
-@import "normalize/normalize";
+//@import "normalize/normalize";
 
 //== Base elements
-@import "base/base";
+//@import "base/base";
 
 //== Helpers
 @import "helpers/helpers";
 
 //== Components
 @import "header/header";
+@import "product-card/product-card";

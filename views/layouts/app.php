@@ -34,6 +34,11 @@ AppAsset::register($this);
         <v-toolbar :clipped-left="primaryDrawer.clipped" app absolute>
             <v-toolbar-side-icon @click.stop="primaryDrawer.model = !primaryDrawer.model"></v-toolbar-side-icon>
             <v-toolbar-title>Vuetify</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-switch
+                    v-model="dark"
+                    :label="`Dark: ${dark.toString()}`"
+            ></v-switch>
         </v-toolbar>
         <v-content>
             <v-container fluid>
