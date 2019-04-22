@@ -1,5 +1,5 @@
-import appAside from './layout/aside';
-import appFooter from './layout/footer';
+import appAside from './layout/Aside';
+import appFooter from './layout/Footer';
 
 const components = {
     appAside,
