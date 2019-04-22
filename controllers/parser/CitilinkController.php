@@ -61,6 +61,9 @@ class CitilinkController extends Controller
      */
     public function actionIndex()
     {
+        if (YII_ENV_PROD) {
+            throw new ForbiddenHttpException();
+        }
         $category_count = Category::find()->count();
         $product_count = Product::find()->count();
         $product_relations_count = ProductRelations::find()->count();
