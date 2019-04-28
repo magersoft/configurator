@@ -9,7 +9,7 @@
                     :to="{ name: 'category', params: { id: category.id } }"
             >
                 <v-list-tile-action>
-<!--                    <v-icon>{{ item.icon }}</v-icon>-->
+                    <v-img height="60" :src="'/uploads/' + category.thumbnail"></v-img>
                 </v-list-tile-action>
 
                 <v-list-tile-content>
@@ -36,6 +36,7 @@
             axios('/api/categories')
                 .then((response) => {
                     this.categories = response.data;
+                    console.log(response.data);
                 });
         }
     }

@@ -6,7 +6,7 @@ use yii\helpers\Html;
 AppAsset::register($this);
 ?>
 <?php $this->beginPage() ?>
-<!doctype html>
+<!DOCTYPE html>
 <html lang="<?= Yii::$app->language ?>">
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
@@ -20,34 +20,7 @@ AppAsset::register($this);
 </head>
 <body>
 <?php $this->beginBody() ?>
-<div id="app">
-    <v-app :dark="dark">
-        <v-navigation-drawer
-            v-model="primaryDrawer.model"
-            :clipped="primaryDrawer.clipped"
-            absolute
-            overflow
-            app
-        >
-            <app-aside></app-aside>
-        </v-navigation-drawer>
-        <v-toolbar :clipped-left="primaryDrawer.clipped" app absolute>
-            <v-toolbar-side-icon @click.stop="primaryDrawer.model = !primaryDrawer.model"></v-toolbar-side-icon>
-            <v-toolbar-title>Vuetify</v-toolbar-title>
-            <v-spacer></v-spacer>
-            <v-switch
-                    v-model="dark"
-                    :label="`Dark: ${dark.toString()}`"
-            ></v-switch>
-        </v-toolbar>
-        <v-content>
-            <v-container fluid>
-                <router-view></router-view>
-            </v-container>
-        </v-content>
-        <v-footer app><app-footer></app-footer></v-footer>
-    </v-app>
-</div>
+<div id="app"></div>
 <?php $this->endBody(); ?>
 </body>
 </html>

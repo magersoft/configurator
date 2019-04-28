@@ -1,57 +1,25 @@
 <template>
-    <div class="container">
-
-        <div v-if="is_logged_in">
-            <h1>User was successfully logged in. Found user id {{current_user}}</h1>
-        </div>
-        <div class="form-horizontal" v-else>
-            <h1>Login page</h1>
-            <p>Please fill out the following fields to login:</p>
-
-            <div class="form-group field-loginform-username required" :class="{'has-error': login_error.length != 0}">
-                <label for="loginform-username" class="col-lg-1 control-label">Username</label>
-                <div class="col-lg-3">
-                    <input type="text" id="loginform-username" v-model="login"
-                           autofocus="autofocus" aria-required="true" class="form-control"
-                           :aria-invalid="login_error.length != 0">
-                </div>
-                <div class="col-lg-8" v-if="login_error.length != 0">
-                    <p class="help-block help-block-error">{{login_error}}</p>
-                </div>
-            </div>
-
-            <div class="form-group field-loginform-password required"
-                 :class="{'has-error': password_error.length != 0}">
-                <label for="loginform-password" class="col-lg-1 control-label">Password</label>
-                <div class="col-lg-3">
-                    <input type="password" id="loginform-password" v-model="password" aria-required="true"
-                           class="form-control" :aria-invalid="password_error.length != 0">
-                </div>
-                <div class="col-lg-8" v-if="password_error.length != 0">
-                    <p class="help-block help-block-error ">{{password_error}}</p>
-                </div>
-            </div>
-            <div class="form-group field-loginform-rememberme">
-                <div class="col-lg-offset-1 col-lg-3">
-                    <input type="checkbox" id="loginform-rememberme" v-model="remember_me">
-                    <label for="loginform-rememberme">Remember Me</label>
-                </div>
-            </div>
-            <div class="form-group">
-                <div class="col-lg-offset-1 col-lg-11">
-                    <button type="button" name="login-button" class="btn btn-primary" @click="attemptLogin">Login
-                    </button>
-                </div>
-            </div>
-
-            <div class="col-lg-offset-1" style="color:#999;">
-                You may login with <strong>admin/admin</strong> or <strong>demo/demo</strong>.<br>
-                To modify the username/password, please check out the code <code>app\models\User::$users</code>.
-            </div>
-
-            <router-link to="registration">Registration</router-link>
-        </div>
-    </div>
+    <v-container fill-height>
+        <v-layout align-center justify-center>
+            <v-flex xs12 sm8 md6>
+                <v-card class="elevation-12">
+                    <v-toolbar dark color="primary">
+                        <v-toolbar-title>Login form</v-toolbar-title>
+                    </v-toolbar>
+                    <v-card-text>
+                        <v-form>
+                            <v-text-field prepend-icon="person" name="login" label="Login" type="text"></v-text-field>
+                            <v-text-field id="password" prepend-icon="lock" name="password" label="Password" type="password"></v-text-field>
+                        </v-form>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn color="primary">Login</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-flex>
+        </v-layout>
+    </v-container>
 </template>
 
 <script>
