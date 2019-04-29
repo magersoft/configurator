@@ -74,6 +74,7 @@
                     { path: '/', title: 'Home', icon: 'dashboard' },
                     { path: '/about', title: 'About', icon: 'info' },
                     { path: '/login', title: 'Login', icon: 'person' },
+                    { path: '/registration', title: 'Registration', icon: 'account_circle' },
                     { path: '/categories', title: 'Categories', icon: 'filter_list' },
                 ]
             }
