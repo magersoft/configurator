@@ -36,7 +36,7 @@
         </v-navigation-drawer>
         <v-toolbar color="primary" dark :clipped-left="primaryDrawer.clipped" app absolute>
             <v-toolbar-side-icon @click.stop="primaryDrawer.model = !primaryDrawer.model"></v-toolbar-side-icon>
-            <v-toolbar-title>Vuetify</v-toolbar-title>
+            <v-toolbar-title>Configurator App</v-toolbar-title>
             <v-spacer></v-spacer>
             <v-toolbar-items class="hidden-sm-and-down">
                 <v-btn flat v-for="item in items" :key="item.title" :to="item.path"><v-icon left>{{ item.icon }}</v-icon> {{ item.title }}</v-btn>

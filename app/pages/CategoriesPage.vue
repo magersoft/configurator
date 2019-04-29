@@ -1,6 +1,5 @@
 <template>
-    <v-container>
-        <h1>Categories</h1>
+    <v-container fluid>
 
         <v-list>
             <v-list-tile
@@ -24,7 +23,7 @@
     export default {
         data() {
             return {
-                categories: [],
+                categories: []
             }
         },
         computed: {

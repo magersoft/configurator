@@ -8,13 +8,41 @@
                     </v-toolbar>
                     <v-card-text>
                         <v-form>
-                            <v-text-field prepend-icon="person" name="login" label="Login" type="text"></v-text-field>
-                            <v-text-field id="password" prepend-icon="lock" name="password" label="Password" type="password"></v-text-field>
+                            <v-text-field
+                                    v-model="email"
+                                    v-validate="'required|email'"
+                                    :error-messages="errors.collect('email')"
+                                    data-vv-name="email"
+                                    prepend-icon="person"
+                                    name="email"
+                                    label="E-mail"
+                                    type="email"
+                                    required
+                            ></v-text-field>
+                            <v-text-field
+                                    v-model="password"
+                                    v-validate="'required|min:6|max:16'"
+                                    :error-messages="errors.collect('password')"
+                                    data-vv-name="password"
+                                    prepend-icon="lock"
+                                    name="password"
+                                    label="Password"
+                                    type="password"
+                                    required
+                            ></v-text-field>
+                            <v-checkbox
+                                    v-model="remember_me"
+                                    value="1"
+                                    label="Remember me"
+                                    data-vv-name="checkbox"
+                                    type="checkbox"
+                                    required
+                            ></v-checkbox>
                         </v-form>
                     </v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="primary">Login</v-btn>
+                        <v-btn @click="attemptLogin" color="primary" :disabled="errors.any() || isFormInvalid">Login</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-flex>
@@ -24,31 +52,62 @@
 
 <script>
     export default {
+        $_veeValidate: {
+            validator: 'new'
+        },
         data() {
             return {
                 is_logged_in: false,
                 current_user: null,
-                login: '',
+                email: '',
                 password: '',
-                remember_me: 0,
-                login_error: '',
-                password_error: ''
+                remember_me: null,
+                dictionary: {
+                    custom: {
+                        email: {
+                            required: 'Email can not be empty'
+                            // custom messages
+                        }
+                    }
+                }
+            }
+        },
+        mounted() {
+          this.$validator.localize('en', this.dictionary);
+        },
+        computed: {
+            isFormInvalid() {
+                return Object.keys(this.fields).some(key => this.fields[key].invalid);
             }
         },
         methods: {
             attemptLogin() {
-                this.login_error = '';
-                this.password_error = '';
+                this.$validator.validateAll()
+                    .then(result => {
+                        if (result) {
+                            axios.post('/api/login', {
+                                username: this.email,
+                                password: this.password,
+                                rememberMe: this.remember_me
+                            }).then(response => {
+                                const { data } = response;
+                                this.refreshCSRFToken(data.token);
+                                if (data.result === 'success') {
+                                    this.is_logged_in = true;
+                                    this.current_user = data.user_id;
+                                } else {
+                                    console.log(data.messages);
+                                    this.$validator.errors.add({
+                                        field: String(Object.keys(data.messages)),
+                                        msg: String(Object.values(data.messages))
+                                    });
+                                }
+                            })
+                        }
+                    });
 
-                if (!this.login.length) {
-                    this.login_error = 'Username cannot be blank.';
-                }
 
-                if (!this.password.length) {
-                    this.password_error = 'Password cannot be blank.';
-                }
-
-                if(this.password_error.length == 0 && this.login_error.length == 0) {
+                if(0) {
                     axios({
                         method: 'post',
                         url: '/api/login',
@@ -59,7 +118,7 @@
                             rememberMe: this.remember_me
                         }
                     }).then((response) => {
-                        this.refreshCSRFToken(response.data.token);
+                        //this.refreshCSRFToken(response.data.token);
                         if (response.data.result == 'success') {
                             this.is_logged_in = true;
                             this.current_user = response.data.user_id;
