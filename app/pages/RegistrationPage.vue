@@ -59,7 +59,7 @@
                                     type="password"
                                     :append-icon="showConfirmed ? 'visibility' : 'visibility_off'"
                                     :type="showConfirmed ? 'text' : 'password'"
-                                    @click:append="showConfirmed = !show"
+                                    @click:append="showConfirmed = !showConfirmed"
                                     required
                             ></v-text-field>
                         </v-form>
@@ -127,6 +127,12 @@
                                 email: this.form.email,
                                 password: this.form.password
                             };
+
+                            axios.post('/api/register/', {
+                                name: this.form.name,
+                                email: this.form.email,
+                                password: this.form.password
+                            }).then(response => console.log(response));
                             console.log(newUser);
                         }
                     })

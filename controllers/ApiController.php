@@ -10,6 +10,9 @@ use app\models\ProductRelations;
 use app\models\Property;
 use app\models\PropertyGroup;
 use app\models\PropertyRelations;
+use dektrium\user\controllers\RegistrationController;
+use dektrium\user\models\RegistrationForm;
+use dektrium\user\models\User;
 use Yii;
 use yii\data\ActiveDataProvider;
 use yii\db\Query;
@@ -71,6 +74,19 @@ class ApiController extends Controller
             return ['result' => 'success', 'user_id' => Yii::$app->user->getId()];
         } else {
             return ['result' => 'error', 'messages' => $model->getFirstErrors()];
+        }
+    }
+
+    public function actionRegister()
+    {
+        $model = new User();
+
+        if ($model->load(Yii::$app->request->post())) {
+            if ($model->register()) {
+                return ['success'];
+            } else {
+                return ['error'];
+            }
         }
     }
 
