@@ -9,38 +9,40 @@
                     <v-card-text>
                         <v-form>
                             <v-text-field
-                                    v-model="form.name"
+                                    v-model="form.username"
                                     v-validate="'required'"
-                                    :error-messages="errors.collect('name')"
-                                    data-vv-name="name"
+                                    :error-messages="errors.collect('register-form-username')"
+                                    data-vv-name="register-form-username"
                                     prepend-icon="person"
-                                    name="name"
+                                    name="register-form-username"
                                     label="Your name"
                                     type="text"
+                                    autocomplete="username"
                                     required
                             ></v-text-field>
                             <v-text-field
                                     v-model="form.email"
                                     v-validate="'required|email'"
-                                    :error-messages="errors.collect('email')"
-                                    data-vv-name="email"
+                                    :error-messages="errors.collect('register-form-email')"
+                                    data-vv-name="register-form-email"
+                                    name="register-form-email"
                                     prepend-icon="email"
-                                    name="email"
                                     label="E-mail"
                                     type="email"
+                                    autocomplete="username"
                                     required
                             ></v-text-field>
                             <v-text-field
                                     v-model="form.password"
                                     v-validate="'required|min:6|max:16'"
-                                    :error-messages="errors.collect('password')"
+                                    :error-messages="errors.collect('register-form-password')"
                                     hint="It should be a minimum of 6 characters"
-                                    data-vv-name="password"
-                                    data-vv-delay="300"
+                                    data-vv-name="register-form-password"
                                     prepend-icon="lock"
                                     ref="password"
-                                    name="password"
+                                    name="register-form-password"
                                     label="Password"
+                                    autocomplete="new-password"
                                     :append-icon="show ? 'visibility' : 'visibility_off'"
                                     :type="show ? 'text' : 'password'"
                                     @click:append="show = !show"
@@ -53,10 +55,10 @@
                                     :error-messages="errors.collect('password_confirmation')"
                                     prepend-icon="lock"
                                     data-vv-name="password_confirmation"
-                                    data-vv-delay="300"
                                     name="password_confirmation"
                                     label="Password confirmation"
                                     type="password"
+                                    autocomplete="new-password"
                                     :append-icon="showConfirmed ? 'visibility' : 'visibility_off'"
                                     :type="showConfirmed ? 'text' : 'password'"
                                     @click:append="showConfirmed = !showConfirmed"
@@ -69,6 +71,15 @@
                         <v-btn @click="attemptRegistration" color="primary" :disabled="errors.any() || isFormInvalid">Registration</v-btn>
                     </v-card-actions>
                 </v-card>
+                <v-alert
+                        v-if="alert"
+                        :value="true"
+                        dismissible
+                        type="success"
+                        transition="scale-transition"
+                >
+                    Your account has been created.
+                </v-alert>
             </v-flex>
         </v-layout>
     </v-container>
@@ -83,8 +94,9 @@
             return {
                 show: false,
                 showConfirmed: false,
+                alert: false,
                 form: {
-                    name: '',
+                    username: '',
                     email: '',
                     password: '',
                     password_confirmation: ''
@@ -92,18 +104,19 @@
                 dictionary: {
                     custom: {
                         name: {
-                          required: () => 'Name can not be empty'
+                            required: () => 'Name can not be empty'
+                        },
+                        email: {
+                            required: () => 'Email can not be empty',
                         },
                         password: {
                             required: () => 'Password can not be empty',
-                            max: 'The password field may not be greater than 100 characters',
+                            max: 'The password field may not be greater than 16 characters',
                             min: 'The password field may not be lesser than 6 characters'
-                            // custom messages
                         },
                         password_confirmation: {
                             required: () => 'Password confirmation can not be empty',
                             confirmed: 'The password confirmation does not match'
-                            // custom messages
                         }
                     }
                 }
@@ -122,18 +135,26 @@
                 this.$validator.validateAll()
                     .then(result => {
                         if (result) {
-                            const newUser = {
-                                name: this.form.name,
+                            axios.post('/api/register', {
+                                username: this.form.username,
                                 email: this.form.email,
                                 password: this.form.password
-                            };
-
-                            axios.post('/api/register/', {
-                                name: this.form.name,
-                                email: this.form.email,
-                                password: this.form.password
-                            }).then(response => console.log(response));
-                            console.log(newUser);
+                            }).then(response => {
+                                const { data } = response;
+                                this.refreshCSRFToken(data.token);
+                                if (data.result === 'success') {
+                                    this.alert = true;
+                                } else {
+                                    for (const error in data.result) {
+                                        if (data.result.hasOwnProperty(error)) {
+                                            this.$validator.errors.add({
+                                                field: String(error),
+                                                msg: String(data.result[error]),
+                                            })
+                                        }
+                                    }
+                                }
+                            });
                         }
                     })
             },

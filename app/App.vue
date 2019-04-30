@@ -78,6 +78,10 @@
                     { path: '/categories', title: 'Categories', icon: 'filter_list' },
                 ]
             }
-        }
+        },
+        mounted() {
+            this.$store.dispatch('GET_PRODUCTS');
+            this.$store.dispatch('GET_LOGGED');
+        },
     }
 </script>

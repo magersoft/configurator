@@ -23,7 +23,6 @@
 
         },
         mounted() {
-            this.$store.dispatch('GET_PRODUCTS');
         },
         computed: {
             products() {
