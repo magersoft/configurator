@@ -197,13 +197,20 @@ class ApiController extends Controller
         return ['product' => $product->getProductApi()];
     }
 
-    public function actionVuex()
+    public function actionConfiguration()
     {
         if ($request = Yii::$app->request->post()) {
-            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            if (Yii::$app->user->isGuest) {
+                $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            } else {
+                $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId()]);
+            }
             if (!$configuration) {
                 $configuration = new Configuration();
                 $configuration->token = Yii::$app->session->getId();
+                if (!Yii::$app->user->isGuest) {
+                    $configuration->user_id = Yii::$app->user->identity->getId();
+                }
                 $configuration->save();
             }
             $saveProduct = new ConfigurationRelations();
@@ -211,7 +218,11 @@ class ApiController extends Controller
             $saveProduct->product_id = $request['id'];
             $saveProduct->save();
         } else if (Yii::$app->request->isGet) {
-            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            if (Yii::$app->user->isGuest) {
+                $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            } else {
+                $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId()]);
+            }
             if (!$configuration) {
                 return false;
             }
@@ -230,7 +241,11 @@ class ApiController extends Controller
             }
             return ['products' => $products];
         } else if (Yii::$app->request->isDelete) {
-            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            if (Yii::$app->user->isGuest) {
+                $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
+            } else {
+                $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId()]);
+            }
             if (!$configuration) {
                 return false;
             }
@@ -242,5 +257,12 @@ class ApiController extends Controller
         } else {
             throw new ForbiddenHttpException();
         }
+    }
+
+    public function actionConfigurations()
+    {
+        $configurations = Configuration::find()->where(['user_id' => Yii::$app->user->identity->getId()])->all();
+
+        return ['configurations' => $configurations];
     }
 }

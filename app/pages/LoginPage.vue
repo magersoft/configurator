@@ -117,6 +117,7 @@
                                 this.refreshCSRFToken(data.token);
                                 if (data.result === 'success') {
                                     this.$store.dispatch('GET_LOGGED');
+                                    this.$store.dispatch('GET_PRODUCTS');
                                     this.current_user = data.user_id;
                                 } else {
                                     for (const error in data.result) {
@@ -137,6 +138,7 @@
                   const { data } = response;
                   if (data.logout) {
                       this.$store.dispatch('GET_LOGGED');
+                      this.$store.dispatch('GET_PRODUCTS');
                   } else {
                       console.error('error');
                   }

@@ -21,17 +21,17 @@ const mutations = {
 };
 const actions = {
     async GET_PRODUCTS(context, payload) {
-        let { data } = await axios.get('/api/vuex').then(response => response);
+        let { data } = await axios.get('/api/configuration').then(response => response);
         context.commit('SET_PRODUCT', data.products);
     },
 
     async SAVE_PRODUCT(context, payload) {
-        let { data } = await axios.post('/api/vuex', { id: payload.id });
+        let { data } = await axios.post('/api/configuration', { id: payload.id });
         context.commit('ADD_PRODUCT', payload);
     },
 
     async REMOVE_PRODUCT(context, payload) {
-        let { data } = await axios.delete('/api/vuex', { params: { id: payload.id } });
+        let { data } = await axios.delete('/api/configuration', { params: { id: payload.id } });
         context.commit('DELETE_PRODUCT', payload);
     }
 };
