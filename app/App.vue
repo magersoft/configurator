@@ -80,7 +80,7 @@
             }
         },
         mounted() {
-            this.$store.dispatch('GET_PRODUCTS');
+            this.$store.dispatch('GET_CONFIGURATIONS');
             this.$store.dispatch('GET_LOGGED');
         },
     }

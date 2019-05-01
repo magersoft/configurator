@@ -43,18 +43,18 @@
     "sass": "^1.15.3",
     "sass-loader": "^7.1.0",
     "sass-resources-loader": "^2.0.0",
-    "vue-template-compiler": "^2.5.21",
+    "vue-template-compiler": "^2.6.10",
     "webpack": "^4.28.3",
     "yesno": "^0.2.0"
   },
   "dependencies": {
     "axios": "^0.15.3",
     "vee-validate": "^2.2.5",
-    "vue": "^2.5.14",
+    "vue": "^2.6.10",
     "vue-infinite-scroll": "^2.0.2",
     "vue-router": "^3.0.1",
     "vue-server-renderer": "^2.5.21",
-    "vuetify": "^1.5.12",
+    "vuetify": "^1.5.14",
     "vuex": "^3.0.1"
   }
 }

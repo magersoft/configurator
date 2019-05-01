@@ -11,6 +11,8 @@ use dektrium\user\models\User;
  *
  * @property int $id
  * @property string $token
+ * @property string $name
+ * @property int $status
  * @property int $user_id
  * @property int $created_at
  * @property int $updated_at
@@ -20,6 +22,14 @@ use dektrium\user\models\User;
  */
 class Configuration extends \yii\db\ActiveRecord
 {
+    const STATUS_PROCESS = 0;
+    const STATUS_DONE = 1;
+
+    const STATUSES = [
+        self::STATUS_PROCESS => 'In process',
+        self::STATUS_DONE => 'Well done',
+    ];
+    
     /**
      * {@inheritdoc}
      */
@@ -41,9 +51,10 @@ class Configuration extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['token'], 'required'],
-            [['created_at', 'updated_at', 'user_id'], 'integer'],
+            [['token', 'name'], 'required'],
+            [['created_at', 'updated_at', 'user_id', 'status'], 'integer'],
             [['token'], 'string', 'max' => 60],
+            [['name'], 'string', 'max' => 50],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],
         ];
     }
@@ -55,9 +66,11 @@ class Configuration extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('app', 'ID'),
+            'name' => Yii::t('app', 'Name'),
             'token' => Yii::t('app', 'Token'),
             'created_at' => Yii::t('app', 'Created At'),
             'updated_at' => Yii::t('app', 'Updated At'),
+            'status' => Yii::t('app', 'Status'),
             'user_id' => 'User ID',
         ];
     }

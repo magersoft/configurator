@@ -24,6 +24,17 @@ use Yii;
  */
 class Category extends \yii\db\ActiveRecord
 {
+
+    const STATUS_ARCHIVED = 0;
+    const STATUS_PUBLIC = 1;
+
+    const STATUSES = [
+        self::STATUS_ARCHIVED => 'Неопубликовано',
+        self::STATUS_PUBLIC => 'Опубликовано'
+    ];
+
+    const CONFIG_CATEGORY = [67,71,72,73,74,75];
+
     /**
      * {@inheritdoc}
      */
@@ -101,6 +112,25 @@ class Category extends \yii\db\ActiveRecord
     public function getProducts0()
     {
         return $this->hasMany(Product::className(), ['category_id' => 'id']);
+    }
+
+    public function getCategoryApi()
+    {
+        return [
+            'id' => $this->id,
+            'short_title' => $this->title,
+            'thumbnail' => $this->getThumbnail()
+        ];
+    }
+
+    public function getThumbnail()
+    {
+        $path = './uploads/'.$this->thumbnail;
+
+        if (!$this->thumbnail || !file_exists($path) || !filesize($path)) {
+            return '/images/placeholder.jpg';
+        }
+        return '/uploads/'.$this->thumbnail;
     }
 
     /**

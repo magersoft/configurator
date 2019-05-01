@@ -165,16 +165,14 @@ class Product extends \yii\db\ActiveRecord
 
     public function getProductApi()
     {
-        if ($this->status !== self::PRODUCT_STATUS_VALUE_PUBLIC) {
-            return false;
-        }
-
         return [
+            'id' => $this->id,
             'title' => $this->title,
             'short_title' => $this->short_title,
             'short_description' => $this->short_description,
             'brand' => $this->brand,
             'link' => $this->link,
+            'category_id' => $this->category_id,
             'category' => $this->category->title,
             'thumbnail' => $this->getThumbnail(),
             'prices' => $this->getRelationsPrices(),

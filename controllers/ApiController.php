@@ -22,6 +22,7 @@ use yii\db\Query;
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
 use app\models\LoginForm;
@@ -171,16 +172,7 @@ class ApiController extends Controller
 
         $result = [];
         foreach ($products->getModels() as $product) {
-            $result[] = [
-                'id' => $product->id,
-                'short_title' => $product->short_title,
-                'short_description' => $product->short_description,
-                'thumbnail' => $product->getThumbnail(),
-                'regular_price' => $product->productRelations[0]->regular_price,
-                'sale_price' => $product->productRelations[0]->sale_price,
-                'club_price' => $product->productRelations[0]->club_price,
-                'property' => []
-            ];
+            $result[] = $product->getProductApi();
         }
         return ['result' => $result, 'pagination' => $products->getPagination()->getLinks()];
     }
@@ -197,72 +189,143 @@ class ApiController extends Controller
         return ['product' => $product->getProductApi()];
     }
 
-    public function actionConfiguration()
+    public function actionGetConfigurations()
     {
-        if ($request = Yii::$app->request->post()) {
-            if (Yii::$app->user->isGuest) {
-                $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
-            } else {
-                $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId()]);
+        if (!Yii::$app->user->isGuest) {
+            $configurations = Configuration::find()->where(['user_id' => Yii::$app->user->identity->getId()])->all();
+        }
+
+        return ['configurations' => $configurations];
+    }
+
+    public function actionGetConfiguration()
+    {
+        if (Yii::$app->user->isGuest) {
+            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId(), 'status' => Configuration::STATUS_DONE]);
+        } else {
+            $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId(), 'status' => Configuration::STATUS_DONE]);
+        }
+        if (!$configuration) {
+            throw new NotFoundHttpException();
+        }
+
+        $products = [];
+
+        foreach ($configuration->configurationRelations as $relation) {
+            $products[] = $relation->getProduct();
+        }
+
+        return ['products' => $products];
+    }
+
+    public function actionCreateConfiguration()
+    {
+        if (!Yii::$app->request->isAjax) {
+            throw new ForbiddenHttpException();
+        }
+
+        $request = Yii::$app->request->post();
+
+        $config_category = Category::CONFIG_CATEGORY;
+
+        $result = [];
+
+        foreach (Category::find()->where(['status' => Category::STATUS_PUBLIC])->all() as $category) {
+            if (in_array($category->id, $config_category)) {
+                $result[] = $category->getCategoryApi();
             }
+        }
+
+        if (Yii::$app->user->isGuest) {
+            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId(), 'status' => Configuration::STATUS_PROCESS]);
+        } else {
+            $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId(), 'status' => Configuration::STATUS_PROCESS]);
+        }
+
+        if (Yii::$app->request->isGet) {
             if (!$configuration) {
                 $configuration = new Configuration();
                 $configuration->token = Yii::$app->session->getId();
-                if (!Yii::$app->user->isGuest) {
-                    $configuration->user_id = Yii::$app->user->identity->getId();
-                }
+                $configuration->name = 'New configuration';
+                    if (!Yii::$app->user->isGuest) {
+                      $configuration->user_id = Yii::$app->user->identity->getId();
+                    }
                 $configuration->save();
-            }
-            $saveProduct = new ConfigurationRelations();
-            $saveProduct->configuration_id = $configuration->id;
-            $saveProduct->product_id = $request['id'];
-            $saveProduct->save();
-        } else if (Yii::$app->request->isGet) {
-            if (Yii::$app->user->isGuest) {
-                $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
             } else {
-                $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId()]);
+                foreach ($result as $key => $value) {
+                    foreach ($configuration->configurationRelations as $relation) {
+                        $product = Product::findOne(['id' => $relation->product_id]);
+                        if ($value['id'] === $product->category_id) {
+                          $result[$key] = $product->getProductApi();
+                        }
+                    }
+                }
             }
+            return ['result' => $result, 'configuration' => $configuration];
+        }
+        if (Yii::$app->request->isPost) {
+            if ($request['id']) {
+              if (!$configuration) {
+                  throw new NotFoundHttpException();
+              }
+              $addProduct = new ConfigurationRelations();
+              $addProduct->configuration_id = $configuration->id;
+              $addProduct->product_id = $request['id'];
+              $addProduct->save();
+            }
+        }
+        if (Yii::$app->request->isDelete) {
             if (!$configuration) {
-                return false;
-            }
-            $products = [];
-            $configRelations = ConfigurationRelations::find()->where(['configuration_id' => $configuration->id])->all();
-            foreach ($configRelations as $relation) {
-                $products[] = [
-                    'id' => $relation->product->id,
-                    'short_title' => $relation->product->short_title,
-                    'short_description' => $relation->product->short_description,
-                    'thumbnail' => $relation->product->getThumbnail(),
-                    'regular_price' => $relation->product->productRelations[0]->regular_price,
-                    'sale_price' => $relation->product->productRelations[0]->sale_price,
-                    'club_price' => $relation->product->productRelations[0]->club_price,
-                ];
-            }
-            return ['products' => $products];
-        } else if (Yii::$app->request->isDelete) {
-            if (Yii::$app->user->isGuest) {
-                $configuration = Configuration::findOne(['token' => Yii::$app->session->getId()]);
-            } else {
-                $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId()]);
-            }
-            if (!$configuration) {
-                return false;
+                throw new NotFoundHttpException();
             }
             $removeProduct = ConfigurationRelations::findOne([
                 'configuration_id' => $configuration->id,
                 'product_id' => Yii::$app->request->get()['id']
             ]);
             $removeProduct->delete();
-        } else {
-            throw new ForbiddenHttpException();
+
+            foreach ($result as $key => $value) {
+                foreach ($configuration->configurationRelations as $relation) {
+                    $product = Product::findOne(['id' => $relation->product_id]);
+                    if ($value['id'] === $product->category_id) {
+                        $result[$key] = $product->getProductApi();
+                    }
+                }
+            }
+            return ['result' => $result];
         }
     }
 
-    public function actionConfigurations()
+    /**
+     * @throws ForbiddenHttpException
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
+    public function actionSaveConfiguration()
     {
-        $configurations = Configuration::find()->where(['user_id' => Yii::$app->user->identity->getId()])->all();
+        if (!Yii::$app->request->isPost) {
+            throw new ForbiddenHttpException();
+        }
 
-        return ['configurations' => $configurations];
+        $request = Yii::$app->request->post();
+
+        if ($request) {
+            $configuration = Configuration::findOne(['id' => $request['id']]);
+            $configuration->name = $request['name'];
+            $configuration->status = Configuration::STATUS_DONE;
+            $configuration->update();
+        }
+    }
+
+    /**
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
+    public function actionDeleteConfiguration()
+    {
+        if (Yii::$app->request->isDelete) {
+            $configuration = Configuration::findOne(['id' => Yii::$app->request->get('id')]);
+            $configuration->delete();
+        }
     }
 }

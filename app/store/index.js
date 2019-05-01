@@ -1,7 +1,7 @@
 import Vue from "vue";
 import Vuex from 'vuex';
 
-import products from './modules/products';
+import configurator from './modules/configurator';
 import filters from './modules/filters';
 import users from './modules/users';
 
@@ -13,7 +13,7 @@ export default new Vuex.Store({
     mutations: {},
     actions: {},
     modules: {
-        products,
+        configurator,
         filters,
         users,
     }
