@@ -116,6 +116,7 @@
                                 const { data } = response;
                                 this.refreshCSRFToken(data.token);
                                 if (data.result === 'success') {
+                                    this.$store.dispatch('GET_CONFIGURATION');
                                     this.$store.dispatch('GET_LOGGED');
                                     this.$store.dispatch('GET_PRODUCTS');
                                     this.current_user = data.user_id;
@@ -137,6 +138,7 @@
               axios.get('/api/logout').then(response => {
                   const { data } = response;
                   if (data.logout) {
+                      this.$store.dispatch('GET_CONFIGURATION');
                       this.$store.dispatch('GET_LOGGED');
                       this.$store.dispatch('GET_PRODUCTS');
                   } else {

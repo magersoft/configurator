@@ -187,13 +187,6 @@
                 this.dialog = true;
                 this.$store.dispatch('CREATE_CONFIGURATION');
             },
-            selectConfigCategory(id) {
-                axios.get('/api/products', { params: { category_id: id } })
-                    .then(response => {
-                        this.dialog2 = true;
-                        this.products = response.data.result;
-                    })
-            },
             saveConfiguration() {
                 this.dialog = false;
                 const payload = {

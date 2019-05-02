@@ -318,6 +318,24 @@ class ApiController extends Controller
     }
 
     /**
+     * @throws ForbiddenHttpException
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
+    public function actionUpdateConfiguration()
+    {
+        if (!Yii::$app->request->isGet) {
+            throw new ForbiddenHttpException();
+        }
+
+        $request = Yii::$app->request->get();
+
+        if ($request) {
+            $configuration = Configuration::findOne(['id' => $request['id']]);
+        }
+    }
+
+    /**
      * @throws \Throwable
      * @throws \yii\db\StaleObjectException
      */
