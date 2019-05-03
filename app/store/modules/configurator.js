@@ -9,7 +9,7 @@ const getters = {
     CURRENT_CONFIGURATION: state => state.currentConfiguration
 };
 const mutations = {
-    SET_PRODUCT: (state, payload) => {
+    SET_PRODUCTS: (state, payload) => {
         state.configurationProducts = payload;
     },
     ADD_PRODUCT: (state, payload) => {
@@ -22,12 +22,17 @@ const mutations = {
     SET_CURRENT_CONFIGURATION: (state, payload) => {
         state.currentConfiguration = payload;
     },
-
-    SET_CONFIGURATION: (state, payload) => {
+    UPDATE_CURRENT_CONFIGURATION: (state, payload) => {
+      state.currentConfiguration.status = payload;
+    },
+    SET_CONFIGURATIONS: (state, payload) => {
         state.configurations = payload;
     },
     ADD_CONFIGURATION: (state, payload) => {
         state.configurations.push(payload);
+    },
+    UPDATE_CONFIGURATION: (state, payload) => {
+        state.configurations = state.configurations.map(item => item.id === payload.id ? payload : item);
     },
     DELETE_CONFIGURATION: (state, payload) => {
         state.configurations.splice(state.configurations.indexOf(payload), 1);
@@ -35,26 +40,39 @@ const mutations = {
 };
 const actions = {
     async CREATE_CONFIGURATION(context, payload) {
-        let { data } = await axios.get('/api/create-configuration').then(response => response);
+        let { data } = await axios.post('/api/create-configuration').then(response => response);
         context.commit('SET_CURRENT_CONFIGURATION', data.configuration);
-        context.commit('SET_PRODUCT', data.result);
+        context.commit('SET_PRODUCTS', data.result);
     },
     async SAVE_PRODUCT(context, payload) {
-        let { data } = await axios.post('/api/create-configuration', { id: payload.id });
+        let { data } = await axios.post('/api/add-product', { id: this.getters.CURRENT_CONFIGURATION.id, product_id: payload.id });
         context.commit('ADD_PRODUCT', payload);
+        context.commit('UPDATE_CURRENT_CONFIGURATION', 0);
     },
     async REMOVE_PRODUCT(context, payload) {
-        let { data } = await axios.delete('/api/create-configuration', { params: { id: payload.id } });
-        await context.commit('DELETE_PRODUCT', data.result);
+        let { data } = await axios.delete('/api/remove-product', { params: { id: this.getters.CURRENT_CONFIGURATION.id, product_id: payload.id } });
+        await context.commit('SET_PRODUCTS', data.result);
+        context.commit('UPDATE_CURRENT_CONFIGURATION', 0);
     },
 
     async GET_CONFIGURATIONS(context, payload) {
         let { data } = await axios.get('/api/get-configurations').then(response => response);
-        context.commit('SET_CONFIGURATION', data.configurations);
+        context.commit('SET_CURRENT_CONFIGURATION', data.current_configuration);
+        context.commit('SET_CONFIGURATIONS', data.configurations);
+    },
+    async GET_CONFIGURATION(context, payload) {
+        let { data } = await axios.get('/api/get-configuration', { params: { id: payload } }).then(response => response);
+        context.commit('SET_CURRENT_CONFIGURATION', data.configuration);
+        context.commit('SET_PRODUCTS', data.result);
     },
     async SAVE_CONFIGURATION(context, payload) {
         let { data } = await axios.post('/api/save-configuration', { id: payload.id, name: payload.name });
-        context.commit('ADD_CONFIGURATION', payload)
+        context.commit('ADD_CONFIGURATION', payload);
+        context.commit('UPDATE_CURRENT_CONFIGURATION', 1);
+    },
+    async UPDATE_CONFIGURATION(context, payload) {
+        let { data } = await axios.post('/api/save-configuration', { id: payload.id, name: payload.name });
+        context.commit('UPDATE_CONFIGURATION', payload)
     },
     async REMOVE_CONFIGURATION(context, payload) {
         let { data } = await axios.delete('/api/delete-configuration', { params: { id: payload } });

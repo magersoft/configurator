@@ -1,6 +1,6 @@
 <template>
     <v-container grid-list-md>
-        <v-layout row v-if="isLoggedIn">
+        <v-layout row>
             <v-flex xs12 v-if="configurations.length">
                 <v-subheader>My configurations</v-subheader>
                 <v-list>
@@ -14,7 +14,7 @@
                                 <v-flex xs12>
                                     <v-tooltip bottom>
                                         <template v-slot:activator="{ on }">
-                                            <v-btn flat icon color="primary" v-on="on">
+                                            <v-btn flat icon color="primary" v-on="on" @click="getConfiguration(configuration.id)">
                                                 <v-icon>update</v-icon>
                                             </v-btn>
                                         </template>
@@ -41,6 +41,7 @@
 
 <script>
     import CreateConfiguration from '../components/CreateConfiguration';
+    import {EventBus} from "../event-bus";
 
     export default {
         data() {
@@ -52,6 +53,10 @@
             CreateConfiguration,
         },
         methods: {
+            getConfiguration(id) {
+              this.$store.dispatch('GET_CONFIGURATION', id);
+              EventBus.$emit('get-configuration');
+            },
             deleteConfiguration(id) {
                 this.$store.dispatch('REMOVE_CONFIGURATION', id);
             }

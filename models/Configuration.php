@@ -12,6 +12,7 @@ use dektrium\user\models\User;
  * @property int $id
  * @property string $token
  * @property string $name
+ * @property int $total_price
  * @property int $status
  * @property int $user_id
  * @property int $created_at
@@ -27,8 +28,10 @@ class Configuration extends \yii\db\ActiveRecord
 
     const STATUSES = [
         self::STATUS_PROCESS => 'In process',
-        self::STATUS_DONE => 'Well done',
+        self::STATUS_DONE => 'Well done'
     ];
+
+    public $total_price;
     
     /**
      * {@inheritdoc}
@@ -89,6 +92,18 @@ class Configuration extends \yii\db\ActiveRecord
     public function getConfigurationRelations()
     {
         return $this->hasMany(ConfigurationRelations::className(), ['configuration_id' => 'id']);
+    }
+
+    public function getTotalPrice()
+    {
+        $this->total_price = 0;
+        foreach ($this->configurationRelations as $relation) {
+            foreach ($relation->product->productRelations as $price) {
+                $this->total_price += $price->regular_price * 1;
+            }
+        }
+
+        return $this->total_price;
     }
 
     /**

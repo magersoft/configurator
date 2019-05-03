@@ -1,7 +1,12 @@
 <template>
     <v-layout row text-xs-center>
         <v-flex xs12>
-            <v-btn @click="getConfigurationItems" color="success">Create configuration</v-btn>
+            <v-btn
+                    @click="getConfigurationItems"
+                    :color="this.$store.getters.CURRENT_CONFIGURATION && this.$store.getters.CURRENT_CONFIGURATION.status === 0 ? 'warning' : 'success'"
+            >
+                {{ this.$store.getters.CURRENT_CONFIGURATION && this.$store.getters.CURRENT_CONFIGURATION.status === 0 ? 'Resume' : 'Create' }} configuration
+            </v-btn>
         </v-flex>
         <v-dialog
                 v-model="dialog"
@@ -39,7 +44,7 @@
                             <v-layout>
                                 <v-flex xs12 md6>
                                     <v-text-field
-                                            v-model="name"
+                                            v-model="configurationName"
                                             label="Configuration name"
                                     ></v-text-field>
                                 </v-flex>
@@ -148,7 +153,7 @@
                 notifications: false,
                 sound: true,
                 widgets: false,
-                name: `New configuration`,
+                name: 'New configuration',
                 type: ['Home', 'Gaming', 'Office'],
                 products: [],
                 items: [
@@ -181,6 +186,9 @@
             EventBus.$on('close-dialog', () => {
                 this.dialog2 = false
             });
+            EventBus.$on('get-configuration', () => {
+                this.dialog = true;
+            })
         },
         methods: {
             getConfigurationItems() {
@@ -191,16 +199,33 @@
                 this.dialog = false;
                 const payload = {
                     id: this.$store.getters.CURRENT_CONFIGURATION.id,
-                    name: this.name ? this.name : this.$store.getters.CURRENT_CONFIGURATION.name
+                    name: this.$store.getters.CURRENT_CONFIGURATION.name
                 };
-                this.$store.dispatch('SAVE_CONFIGURATION', payload)
-            }
+                if (this.$store.getters.CURRENT_CONFIGURATION.status === 1) {
+                    this.$store.dispatch('UPDATE_CONFIGURATION', payload)
+                } else {
+                    this.$store.dispatch('SAVE_CONFIGURATION', payload)
+                }
+            },
         },
         computed: {
             configurationItems() {
                 return this.$store.getters.PRODUCTS;
+            },
+            configurationName: {
+                get() {
+                    return this.$store.getters.CURRENT_CONFIGURATION ? this.$store.getters.CURRENT_CONFIGURATION.name : 'New configuration'
+                },
+                set(value) {
+                    const obj = {
+                        id: this.$store.getters.CURRENT_CONFIGURATION.id,
+                        status: this.$store.getters.CURRENT_CONFIGURATION.status,
+                        name: value
+                    };
+                    this.$store.commit('SET_CURRENT_CONFIGURATION', obj)
+                }
             }
-        }
+        },
     }
 </script>
 

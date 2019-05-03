@@ -12,8 +12,8 @@ use app\models\PropertyGroup;
 use app\models\PropertyRelations;
 use dektrium\user\controllers\RegistrationController;
 use dektrium\user\controllers\SecurityController;
+use dektrium\user\models\LoginForm;
 use dektrium\user\models\RegistrationForm;
-use dektrium\user\models\User;
 use dektrium\user\traits\AjaxValidationTrait;
 use dektrium\user\traits\EventTrait;
 use Yii;
@@ -25,7 +25,6 @@ use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
-use app\models\LoginForm;
 use yii\widgets\ActiveForm;
 
 class ApiController extends Controller
@@ -68,6 +67,10 @@ class ApiController extends Controller
         return $result;
     }
 
+    /**
+     * @return array
+     * @throws ForbiddenHttpException
+     */
     public function actionLogged()
     {
         if (Yii::$app->request->isGet) {
@@ -86,6 +89,7 @@ class ApiController extends Controller
      * Login action.
      *
      * @return Response|array
+     * @throws ForbiddenHttpException
      */
     public function actionLogin()
     {
@@ -93,7 +97,7 @@ class ApiController extends Controller
             throw new ForbiddenHttpException();
         }
 
-        $model = Yii::createObject(\dektrium\user\models\LoginForm::className());
+        $model = Yii::createObject(LoginForm::className());
         $event = $this->getFormEvent($model);
 
         $this->performAjaxValidation($model);
@@ -109,8 +113,16 @@ class ApiController extends Controller
         }
     }
 
+    /**
+     * @return array
+     * @throws ForbiddenHttpException
+     */
     public function actionLogout()
     {
+        if (Yii::$app->user->isGuest) {
+            throw new ForbiddenHttpException();
+        }
+
         try {
             $event = $this->getUserEvent(Yii::$app->user->identity);
 
@@ -189,35 +201,80 @@ class ApiController extends Controller
         return ['product' => $product->getProductApi()];
     }
 
+    /**
+     * @return array
+     * @throws ForbiddenHttpException
+     */
     public function actionGetConfigurations()
     {
-        if (!Yii::$app->user->isGuest) {
-            $configurations = Configuration::find()->where(['user_id' => Yii::$app->user->identity->getId()])->all();
+        if (!Yii::$app->request->isGet) {
+            throw new ForbiddenHttpException();
         }
 
-        return ['configurations' => $configurations];
+        if (!Yii::$app->user->isGuest) {
+            $configurations = Configuration::find()->where(['user_id' => Yii::$app->user->identity->getId(), 'status' => Configuration::STATUS_DONE])->all();
+            $current_configuration = Configuration::find()->where(['user_id' => Yii::$app->user->identity->getId(), 'status' => Configuration::STATUS_PROCESS])->one();
+        } else {
+            $configurations = Configuration::find()->where(['token' => Yii::$app->session->getId(), 'status' => Configuration::STATUS_DONE])->all();
+            $current_configuration = Configuration::find()->where(['token' => Yii::$app->session->getId(), 'status' => Configuration::STATUS_PROCESS])->one();
+        }
+
+        return ['configurations' => $configurations, 'current_configuration' => $current_configuration];
     }
 
+    /**
+     * @return array
+     * @throws BadRequestHttpException
+     * @throws ForbiddenHttpException
+     * @throws NotFoundHttpException
+     */
     public function actionGetConfiguration()
     {
-        if (Yii::$app->user->isGuest) {
-            $configuration = Configuration::findOne(['token' => Yii::$app->session->getId(), 'status' => Configuration::STATUS_DONE]);
-        } else {
-            $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId(), 'status' => Configuration::STATUS_DONE]);
+        if (!Yii::$app->request->isGet) {
+            throw new ForbiddenHttpException();
         }
+
+        $request = Yii::$app->request->get();
+
+        if (!$request) {
+            throw new BadRequestHttpException();
+        }
+
+        $result = [];
+
+        $configuration = Configuration::findOne(['id' => $request['id']]);
+
+        $config_category = Category::CONFIG_CATEGORY;
+
+        foreach (Category::find()->where(['status' => Category::STATUS_PUBLIC])->all() as $category) {
+            if (in_array($category->id, $config_category)) {
+                $result[] = $category->getCategoryApi();
+            }
+        }
+
         if (!$configuration) {
             throw new NotFoundHttpException();
         }
 
-        $products = [];
-
-        foreach ($configuration->configurationRelations as $relation) {
-            $products[] = $relation->getProduct();
+        foreach ($result as $key => $value) {
+            foreach ($configuration->configurationRelations as $relation) {
+                $product = Product::findOne(['id' => $relation->product_id]);
+                if ($value['id'] === $product->category_id) {
+                    $result[$key] = $product->getProductApi();
+                }
+            }
         }
 
-        return ['products' => $products];
+        return ['result' => $result, 'configuration' => $configuration];
     }
 
+    /**
+     * @return array
+     * @throws ForbiddenHttpException
+     * @throws NotFoundHttpException
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
     public function actionCreateConfiguration()
     {
         if (!Yii::$app->request->isAjax) {
@@ -242,7 +299,7 @@ class ApiController extends Controller
             $configuration = Configuration::findOne(['user_id' => Yii::$app->user->identity->getId(), 'status' => Configuration::STATUS_PROCESS]);
         }
 
-        if (Yii::$app->request->isGet) {
+        if (Yii::$app->request->isPost && !$request) {
             if (!$configuration) {
                 $configuration = new Configuration();
                 $configuration->token = Yii::$app->session->getId();
@@ -261,39 +318,76 @@ class ApiController extends Controller
                     }
                 }
             }
-            return ['result' => $result, 'configuration' => $configuration];
         }
-        if (Yii::$app->request->isPost) {
-            if ($request['id']) {
-              if (!$configuration) {
-                  throw new NotFoundHttpException();
-              }
-              $addProduct = new ConfigurationRelations();
-              $addProduct->configuration_id = $configuration->id;
-              $addProduct->product_id = $request['id'];
-              $addProduct->save();
-            }
+        return ['result' => $result, 'configuration' => $configuration];
+    }
+
+    /**
+     * @throws BadRequestHttpException
+     * @throws NotFoundHttpException
+     */
+    public function actionAddProduct()
+    {
+        $request = Yii::$app->request->post();
+        if (!$request) {
+            throw new BadRequestHttpException();
         }
-        if (Yii::$app->request->isDelete) {
-            if (!$configuration) {
+        $configuration = Configuration::findOne(['id' => $request['id']]);
+        if (!$configuration) {
+            throw new NotFoundHttpException();
+        }
+        try {
+            $configurationRelations = new ConfigurationRelations();
+            $configurationRelations->configuration_id = $configuration->id;
+            $configurationRelations->product_id = $request['product_id'];
+            $configurationRelations->save();
+        } catch (\Exception $e) {
+            Yii::error($e);
+        }
+    }
+
+    /**
+     * @throws ForbiddenHttpException
+     * @throws NotFoundHttpException
+     * @throws \Throwable
+     * @throws \yii\db\StaleObjectException
+     */
+    public function actionRemoveProduct()
+    {
+        if (!Yii::$app->request->isDelete) {
+            throw new ForbiddenHttpException();
+        }
+        $configuration = Configuration::findOne(['id' => Yii::$app->request->get('id')]);
+        if (!$configuration) {
+            throw new NotFoundHttpException();
+        }
+        try {
+            $configurationRelations = ConfigurationRelations::findOne(['configuration_id' => $configuration->id, 'product_id' => Yii::$app->request->get('product_id')]);
+            if (!$configurationRelations) {
                 throw new NotFoundHttpException();
             }
-            $removeProduct = ConfigurationRelations::findOne([
-                'configuration_id' => $configuration->id,
-                'product_id' => Yii::$app->request->get()['id']
-            ]);
-            $removeProduct->delete();
+            $configurationRelations->delete();
+        } catch (\Exception $e) {
+            Yii::error($e);
+        }
 
-            foreach ($result as $key => $value) {
-                foreach ($configuration->configurationRelations as $relation) {
-                    $product = Product::findOne(['id' => $relation->product_id]);
-                    if ($value['id'] === $product->category_id) {
-                        $result[$key] = $product->getProductApi();
-                    }
+        $config_category = Category::CONFIG_CATEGORY;
+        $result = [];
+        foreach (Category::find()->where(['status' => Category::STATUS_PUBLIC])->all() as $category) {
+            if (in_array($category->id, $config_category)) {
+                $result[] = $category->getCategoryApi();
+            }
+        }
+        foreach ($result as $key => $value) {
+            foreach ($configuration->configurationRelations as $relation) {
+                $product = Product::findOne(['id' => $relation->product_id]);
+                if ($value['id'] === $product->category_id) {
+                    $result[$key] = $product->getProductApi();
                 }
             }
-            return ['result' => $result];
         }
+
+        return ['result' => $result, 'configuration' => $configuration];
     }
 
     /**
@@ -309,6 +403,10 @@ class ApiController extends Controller
 
         $request = Yii::$app->request->post();
 
+        if (!$request) {
+            throw new BadRequestHttpException();
+        }
+
         if ($request) {
             $configuration = Configuration::findOne(['id' => $request['id']]);
             $configuration->name = $request['name'];
@@ -318,29 +416,20 @@ class ApiController extends Controller
     }
 
     /**
+     * @throws BadRequestHttpException
      * @throws ForbiddenHttpException
-     * @throws \Throwable
-     * @throws \yii\db\StaleObjectException
-     */
-    public function actionUpdateConfiguration()
-    {
-        if (!Yii::$app->request->isGet) {
-            throw new ForbiddenHttpException();
-        }
-
-        $request = Yii::$app->request->get();
-
-        if ($request) {
-            $configuration = Configuration::findOne(['id' => $request['id']]);
-        }
-    }
-
-    /**
      * @throws \Throwable
      * @throws \yii\db\StaleObjectException
      */
     public function actionDeleteConfiguration()
     {
+        if (!Yii::$app->request->isDelete) {
+            throw new ForbiddenHttpException();
+        }
+        if (!Yii::$app->request->get()) {
+            throw new BadRequestHttpException();
+        }
+
         if (Yii::$app->request->isDelete) {
             $configuration = Configuration::findOne(['id' => Yii::$app->request->get('id')]);
             $configuration->delete();
