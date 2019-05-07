@@ -64,6 +64,7 @@
                                 <v-flex xs12 sm6 md4 lg2 v-for="item of configurationItems" :key="item.id">
                                     <product-card :product="item" for-config></product-card>
                                 </v-flex>
+                                <div>{{ currentConfigurationState.total_price }}</div>
                             </v-layout>
                             <v-divider></v-divider>
                             <v-list three-line subheader>
@@ -224,6 +225,9 @@
                     };
                     this.$store.commit('SET_CURRENT_CONFIGURATION', obj)
                 }
+            },
+            currentConfigurationState() {
+                return this.$store.getters.CURRENT_CONFIGURATION ? this.$store.getters.CURRENT_CONFIGURATION : 0;
             }
         },
     }

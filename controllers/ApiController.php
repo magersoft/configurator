@@ -18,6 +18,7 @@ use dektrium\user\traits\AjaxValidationTrait;
 use dektrium\user\traits\EventTrait;
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\db\Exception;
 use yii\db\Query;
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
@@ -325,6 +326,7 @@ class ApiController extends Controller
     /**
      * @throws BadRequestHttpException
      * @throws NotFoundHttpException
+     * @throws \Throwable
      */
     public function actionAddProduct()
     {
@@ -332,17 +334,30 @@ class ApiController extends Controller
         if (!$request) {
             throw new BadRequestHttpException();
         }
+
         $configuration = Configuration::findOne(['id' => $request['id']]);
         if (!$configuration) {
             throw new NotFoundHttpException();
         }
+
+        $transaction = ConfigurationRelations::getDb()->getTransaction();
+
         try {
             $configurationRelations = new ConfigurationRelations();
             $configurationRelations->configuration_id = $configuration->id;
             $configurationRelations->product_id = $request['product_id'];
             $configurationRelations->save();
-        } catch (\Exception $e) {
-            Yii::error($e);
+
+            $configuration->total_price = $request['total_price'];
+            $configuration->save();
+
+            $transaction->commit();
+        } catch(\Exception $e) {
+            $transaction->rollBack();
+            throw $e;
+        } catch(\Throwable $e) {
+            $transaction->rollBack();
+            throw $e;
         }
     }
 
@@ -362,6 +377,9 @@ class ApiController extends Controller
             throw new NotFoundHttpException();
         }
         try {
+            $configuration->total_price = Yii::$app->request->get('total_price');
+            $configuration->save();
+
             $configurationRelations = ConfigurationRelations::findOne(['configuration_id' => $configuration->id, 'product_id' => Yii::$app->request->get('product_id')]);
             if (!$configurationRelations) {
                 throw new NotFoundHttpException();
@@ -434,5 +452,10 @@ class ApiController extends Controller
             $configuration = Configuration::findOne(['id' => Yii::$app->request->get('id')]);
             $configuration->delete();
         }
+    }
+
+    public function actionUpdatePrice()
+    {
+
     }
 }

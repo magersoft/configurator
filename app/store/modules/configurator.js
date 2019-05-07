@@ -36,23 +36,43 @@ const mutations = {
     },
     DELETE_CONFIGURATION: (state, payload) => {
         state.configurations.splice(state.configurations.indexOf(payload), 1);
+    },
+
+    PLUS_TOTAL_PRICE: (state, payload) => {
+        state.currentConfiguration.total_price += +payload;
+    },
+    MINUS_TOTAL_PRICE: (state, payload) => {
+        state.currentConfiguration.total_price -= +payload;
     }
 };
 const actions = {
     async CREATE_CONFIGURATION(context, payload) {
         let { data } = await axios.post('/api/create-configuration').then(response => response);
-        context.commit('SET_CURRENT_CONFIGURATION', data.configuration);
-        context.commit('SET_PRODUCTS', data.result);
+        await context.commit('SET_CURRENT_CONFIGURATION', data.configuration);
+        await context.commit('SET_PRODUCTS', data.result);
     },
     async SAVE_PRODUCT(context, payload) {
-        let { data } = await axios.post('/api/add-product', { id: this.getters.CURRENT_CONFIGURATION.id, product_id: payload.id });
-        context.commit('ADD_PRODUCT', payload);
-        context.commit('UPDATE_CURRENT_CONFIGURATION', 0);
+        await context.commit('PLUS_TOTAL_PRICE', payload.prices.citilink.regular_price);
+        let { data } = await axios.post('/api/add-product', {
+                id: this.getters.CURRENT_CONFIGURATION.id,
+                product_id: payload.id,
+                total_price: this.getters.CURRENT_CONFIGURATION.total_price
+        });
+        // todo: обработать ошибки с сервера в сторе
+        await context.commit('ADD_PRODUCT', payload);
+        await context.commit('UPDATE_CURRENT_CONFIGURATION', 0);
     },
     async REMOVE_PRODUCT(context, payload) {
-        let { data } = await axios.delete('/api/remove-product', { params: { id: this.getters.CURRENT_CONFIGURATION.id, product_id: payload.id } });
+        await context.commit('MINUS_TOTAL_PRICE', payload.prices.citilink.regular_price);
+        let { data } = await axios.delete('/api/remove-product', {
+            params: {
+                id: this.getters.CURRENT_CONFIGURATION.id,
+                product_id: payload.id,
+                total_price: this.getters.CURRENT_CONFIGURATION.total_price
+            }
+        });
         await context.commit('SET_PRODUCTS', data.result);
-        context.commit('UPDATE_CURRENT_CONFIGURATION', 0);
+        await context.commit('UPDATE_CURRENT_CONFIGURATION', 0);
     },
 
     async GET_CONFIGURATIONS(context, payload) {
