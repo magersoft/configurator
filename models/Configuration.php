@@ -30,8 +30,6 @@ class Configuration extends \yii\db\ActiveRecord
         self::STATUS_PROCESS => 'In process',
         self::STATUS_DONE => 'Well done'
     ];
-
-    public $total_price;
     
     /**
      * {@inheritdoc}
@@ -55,7 +53,7 @@ class Configuration extends \yii\db\ActiveRecord
     {
         return [
             [['token', 'name'], 'required'],
-            [['created_at', 'updated_at', 'user_id', 'status'], 'integer'],
+            [['created_at', 'updated_at', 'user_id', 'status', 'total_price'], 'integer'],
             [['token'], 'string', 'max' => 60],
             [['name'], 'string', 'max' => 50],
             [['user_id'], 'exist', 'skipOnError' => true, 'targetClass' => User::className(), 'targetAttribute' => ['user_id' => 'id']],

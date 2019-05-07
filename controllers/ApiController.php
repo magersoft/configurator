@@ -340,21 +340,22 @@ class ApiController extends Controller
             throw new NotFoundHttpException();
         }
 
-        $transaction = ConfigurationRelations::getDb()->getTransaction();
+        $transaction = ConfigurationRelations::getDb()->beginTransaction();
 
         try {
             $configurationRelations = new ConfigurationRelations();
             $configurationRelations->configuration_id = $configuration->id;
             $configurationRelations->product_id = $request['product_id'];
-            $configurationRelations->save();
+            if (!$configurationRelations->save()) {
+                throw new Exception('Error save configuration relation');
+            }
 
             $configuration->total_price = $request['total_price'];
-            $configuration->save();
+            if (!$configuration->save()) {
+                throw new Exception('Error save configuration');
+            }
 
             $transaction->commit();
-        } catch(\Exception $e) {
-            $transaction->rollBack();
-            throw $e;
         } catch(\Throwable $e) {
             $transaction->rollBack();
             throw $e;
@@ -376,17 +377,26 @@ class ApiController extends Controller
         if (!$configuration) {
             throw new NotFoundHttpException();
         }
+
+        $transaction = ConfigurationRelations::getDb()->beginTransaction();
+
         try {
             $configuration->total_price = Yii::$app->request->get('total_price');
-            $configuration->save();
+            if (!$configuration->save()) {
+                throw new Exception('Error update configuration');
+            }
 
             $configurationRelations = ConfigurationRelations::findOne(['configuration_id' => $configuration->id, 'product_id' => Yii::$app->request->get('product_id')]);
             if (!$configurationRelations) {
                 throw new NotFoundHttpException();
             }
-            $configurationRelations->delete();
+            if (!$configurationRelations->delete()) {
+                throw new Exception('Error delete configuration relation');
+            }
+            $transaction->commit();
         } catch (\Exception $e) {
-            Yii::error($e);
+            $transaction->rollBack();
+            throw $e;
         }
 
         $config_category = Category::CONFIG_CATEGORY;
@@ -452,10 +462,5 @@ class ApiController extends Controller
             $configuration = Configuration::findOne(['id' => Yii::$app->request->get('id')]);
             $configuration->delete();
         }
-    }
-
-    public function actionUpdatePrice()
-    {
-
     }
 }
