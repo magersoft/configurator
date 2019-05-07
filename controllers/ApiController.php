@@ -304,6 +304,8 @@ class ApiController extends Controller
             if (!$configuration) {
                 $configuration = new Configuration();
                 $configuration->token = Yii::$app->session->getId();
+                $configuration->status = 0;
+                $configuration->total_price = 0;
                 $configuration->name = 'New configuration';
                     if (!Yii::$app->user->isGuest) {
                       $configuration->user_id = Yii::$app->user->identity->getId();

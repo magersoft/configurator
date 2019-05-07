@@ -73,6 +73,7 @@ class Configuration extends \yii\db\ActiveRecord
             'updated_at' => Yii::t('app', 'Updated At'),
             'status' => Yii::t('app', 'Status'),
             'user_id' => 'User ID',
+            'total_price' => Yii::t('app', 'Total price'),
         ];
     }
 
@@ -91,18 +92,6 @@ class Configuration extends \yii\db\ActiveRecord
     {
         return $this->hasMany(ConfigurationRelations::className(), ['configuration_id' => 'id']);
     }
-
-//    public function getTotalPrice()
-//    {
-//        $this->total_price = 0;
-//        foreach ($this->configurationRelations as $relation) {
-//            foreach ($relation->product->productRelations as $price) {
-//                $this->total_price += $price->regular_price * 1;
-//            }
-//        }
-//
-//        return $this->total_price;
-//    }
 
     /**
      * {@inheritdoc}
