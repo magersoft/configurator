@@ -215,7 +215,6 @@
                 }
             },
             loadMoreProducts() {
-                console.log(this.nextProductPage);
                 if (!this.busy && this.nextProductPage) {
                     this.busy = true;
 

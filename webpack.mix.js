@@ -60,6 +60,4 @@ if (!mix.inProduction()) {
     ]);
 }
 
-mix.webpackConfig({
-
-});
+mix.webpackConfig({});
