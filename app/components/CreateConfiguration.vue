@@ -61,9 +61,10 @@
                                         indeterminate
                                         color="primary"
                                 ></v-progress-circular>
-                                <v-flex xs12 sm6 md4 lg2 v-for="item of configurationItems" :key="item.id">
-                                    <product-card :product="item" for-config></product-card>
-                                </v-flex>
+
+                                    <v-flex xs12 sm6 md4 lg2 v-for="item of configurationItems" :key="item.id">
+                                        <product-card :product="item" for-config></product-card>
+                                    </v-flex>
                                 <div>{{ currentConfigurationState.total_price }}</div>
                             </v-layout>
                             <v-divider></v-divider>
@@ -113,22 +114,26 @@
         >
             <v-card tile>
                 <v-toolbar card dark color="primary">
-                    <v-btn icon dark @click="dialog2 = false">
+                    <v-btn icon dark @click="closeProductsDialog">
                         <v-icon>close</v-icon>
                     </v-btn>
-                    <v-toolbar-title>Cat name</v-toolbar-title>
+                    <v-toolbar-title>{{ categoryTitle }}</v-toolbar-title>
                 </v-toolbar>
                 <v-card-text>
                     <v-container grid-list-md text-xs-center>
+                        <div v-infinite-scroll="loadMoreProducts" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+                            <v-layout row wrap justify-center>
+                                <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of products" :key="key">
+                                    <product-card :product="product"></product-card>
+                                </v-flex>
+                            </v-layout>
+                        </div>
                         <v-layout row wrap justify-center>
                             <v-progress-circular
-                                    v-if="!products.length"
+                                    v-if="busy"
                                     indeterminate
                                     color="primary"
                             ></v-progress-circular>
-                            <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of products" :key="key">
-                                <product-card :product="product"></product-card>
-                            </v-flex>
                         </v-layout>
                     </v-container>
                 </v-card-text>
@@ -154,9 +159,12 @@
                 notifications: false,
                 sound: true,
                 widgets: false,
+                busy: false,
+                nextProductPage: null,
+                products: [],
+                categoryTitle: null,
                 name: 'New configuration',
                 type: ['Home', 'Gaming', 'Office'],
-                products: [],
                 items: [
                     {
                         title: 'Click Me'
@@ -178,14 +186,12 @@
                 this.getConfigurationItems();
             }
             EventBus.$on('select-config-category', id => {
-                axios.get('/api/products', { params: { category_id: id } })
-                    .then(response => {
-                        this.dialog2 = true;
-                        this.products = response.data.result;
-                    })
+                this.nextProductPage = `/api/products?category_id=${id}`;
+                this.dialog2 = true;
+                this.loadMoreProducts();
             });
             EventBus.$on('close-dialog', () => {
-                this.dialog2 = false
+                this.closeProductsDialog();
             });
             EventBus.$on('get-configuration', () => {
                 this.dialog = true;
@@ -207,6 +213,24 @@
                 } else {
                     this.$store.dispatch('SAVE_CONFIGURATION', payload)
                 }
+            },
+            loadMoreProducts() {
+                console.log(this.nextProductPage);
+                if (!this.busy && this.nextProductPage) {
+                    this.busy = true;
+
+                    axios.get(this.nextProductPage)
+                        .then(response => {
+                            this.products.push(...response.data.result);
+                            this.nextProductPage = response.data.pagination.next || null;
+                            this.busy = false;
+                            this.categoryTitle = response.data.result[0].category;
+                        })
+                }
+            },
+            closeProductsDialog() {
+              this.dialog2 = false;
+              this.products = [];
             },
         },
         computed: {
@@ -233,7 +257,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .category-card {
         height: 450px;
         .v-image {
