@@ -209,15 +209,7 @@
             },
             saveConfiguration() {
                 this.dialog = false;
-                const payload = {
-                    id: this.$store.getters.CURRENT_CONFIGURATION.id,
-                    name: this.$store.getters.CURRENT_CONFIGURATION.name
-                };
-                if (this.$store.getters.CURRENT_CONFIGURATION.status === 1) {
-                    this.$store.dispatch('UPDATE_CONFIGURATION', payload)
-                } else {
-                    this.$store.dispatch('SAVE_CONFIGURATION', payload)
-                }
+                this.$store.dispatch('SAVE_CONFIGURATION', this.$store.getters.CURRENT_CONFIGURATION);
             },
             loadMoreProducts() {
                 if (!this.busy && this.nextProductPage) {
@@ -246,12 +238,8 @@
                     return this.$store.getters.CURRENT_CONFIGURATION ? this.$store.getters.CURRENT_CONFIGURATION.name : 'New configuration'
                 },
                 set(value) {
-                    const obj = {
-                        id: this.$store.getters.CURRENT_CONFIGURATION.id,
-                        status: this.$store.getters.CURRENT_CONFIGURATION.status,
-                        name: value
-                    };
-                    this.$store.commit('SET_CURRENT_CONFIGURATION', obj)
+                    this.$store.getters.CURRENT_CONFIGURATION.name = value;
+                    this.$store.commit('SET_CURRENT_CONFIGURATION', this.$store.getters.CURRENT_CONFIGURATION);
                 }
             },
             currentConfigurationState() {

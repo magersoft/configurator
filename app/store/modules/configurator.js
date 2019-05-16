@@ -87,12 +87,15 @@ const actions = {
     },
     async SAVE_CONFIGURATION(context, payload) {
         let { data } = await axios.post('/api/save-configuration', { id: payload.id, name: payload.name });
-        context.commit('ADD_CONFIGURATION', payload);
-        context.commit('UPDATE_CURRENT_CONFIGURATION', 1);
-    },
-    async UPDATE_CONFIGURATION(context, payload) {
-        let { data } = await axios.post('/api/save-configuration', { id: payload.id, name: payload.name });
-        context.commit('UPDATE_CONFIGURATION', payload)
+
+        const update = this.getters.CONFIGURATIONS.find(item => item.id === payload.id);
+
+        if (update) {
+            await context.commit('UPDATE_CONFIGURATION', payload)
+        } else {
+            await context.commit('ADD_CONFIGURATION', payload);
+        }
+        await context.commit('UPDATE_CURRENT_CONFIGURATION', 1);
     },
     async REMOVE_CONFIGURATION(context, payload) {
         let { data } = await axios.delete('/api/delete-configuration', { params: { id: payload } });
