@@ -166,12 +166,14 @@ class ApiController extends Controller
 
     public function actionProducts()
     {
+        /** @var $product Product */
         $request = Yii::$app->request->get();
 
         unset($request['page']);
+        $request['status'] = Product::PRODUCT_STATUS_VALUE_PUBLIC;
 
         $products = Product::find()
-            ->with('productRelations');
+            ->with(['category', 'productRelations.store', 'productMedia', 'propertyRelations.property.group', 'productStocks.stock']);
             if (isset($request['property_id'])) {
                 $products->andWhere(['in', 'id', (new Query())
                     ->select('product_id')
@@ -181,13 +183,34 @@ class ApiController extends Controller
             } else {
                 $products->where($request);
             }
+
         $products = new ActiveDataProvider(['query' => $products]);
 
         $result = [];
         foreach ($products->getModels() as $product) {
             $result[] = $product->getProductApi();
         }
-        return ['result' => $result, 'pagination' => $products->getPagination()->getLinks()];
+
+        $allProducts = $products->query->all();
+        $properties = [];
+        foreach ($allProducts as $product) {
+            // todo: maybe price?
+            foreach ($product->propertyRelations as $propertyRelation) {
+                $property = $propertyRelation->property;
+                $value = $propertyRelation->value;
+
+                if (!isset($properties[$property->id])) {
+                    $properties[$property->id] = [
+                        'title' => $property->name,
+                        'values' => [],
+                    ];
+                }
+                if ($properties[$property->id] && !in_array($value, $properties[$property->id]['values'])) {
+                    $properties[$property->id]['values'][] = $value;
+                }
+            }
+        }
+        return ['result' => $result, 'pagination' => $products->getPagination()->getLinks(), 'properties' => $properties];
     }
 
     public function actionProduct()
