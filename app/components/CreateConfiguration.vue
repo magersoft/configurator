@@ -125,12 +125,14 @@
                             <v-flex md2 style="width: 200px; height: 100%; background-color: #999999" class="hidden-sm-and-down">
                                 Here filters
                             </v-flex>
-                            <v-flex sm12 md10 v-infinite-scroll="loadMoreProducts" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
-                                <v-layout row wrap justify-center>
-                                    <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of products" :key="key">
-                                        <product-card :product="product"></product-card>
-                                    </v-flex>
-                                </v-layout>
+                            <v-flex sm12 md10>
+                                <div v-infinite-scroll="loadMoreProducts" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+                                    <v-layout row wrap justify-center>
+                                        <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of products" :key="key">
+                                            <product-card :product="product"></product-card>
+                                        </v-flex>
+                                    </v-layout>
+                                </div>
                             </v-flex>
                         </v-layout>
                         <v-layout row wrap justify-center>
