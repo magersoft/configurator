@@ -168,17 +168,20 @@ class ApiController extends Controller
     {
         /** @var $product Product */
         $request = Yii::$app->request->get();
+        $post = Yii::$app->request->post();
 
         unset($request['page']);
         $request['status'] = Product::PRODUCT_STATUS_VALUE_PUBLIC;
 
         $products = Product::find()
             ->with(['category', 'productRelations.store', 'productMedia', 'propertyRelations.property.group', 'productStocks.stock']);
-            if (isset($request['property_id'])) {
+            if (isset($post['property'])) {
                 $products->andWhere(['in', 'id', (new Query())
                     ->select('product_id')
                     ->from('property_relations')
-                    ->where($request)
+//                    ->where($request)
+                    ->where(['in', 'value', ['Coffee Lake', 'Pinnacle Ridge']])
+                    ->andWhere(['in', 'property_id', [3]])
                 ]);
             } else {
                 $products->where($request);
@@ -187,34 +190,34 @@ class ApiController extends Controller
         $products = new ActiveDataProvider(['query' => $products]);
 
         $result = [];
+        $properties = [];
+
+
         foreach ($products->getModels() as $product) {
             $result[] = $product->getProductApi();
         }
 
-        if (Yii::$app->request->post()) {
-            var_dump(Yii::$app->request->post()); die;
-        }
+        if (!$post) {
+            $allProducts = $products->query->all();
+            foreach ($allProducts as $product) {
+                // todo: maybe price?
+                $i = 0;
+                foreach ($product->propertyRelations as $propertyRelation) {
+                    $i++;
+                    if ($i > 2) break;
+                    // todo: времено, пока нет таблицы по необходимым проперти
+                    $property = $propertyRelation->property;
+                    $value = $propertyRelation->value;
 
-        $allProducts = $products->query->all();
-        $properties = [];
-        foreach ($allProducts as $product) {
-            // todo: maybe price?
-            $i = 0;
-            foreach ($product->propertyRelations as $propertyRelation) {
-                $i++;
-                if ($i > 2) break;
-                // todo: времено, пока нет таблицы по необходимым проперти
-                $property = $propertyRelation->property;
-                $value = $propertyRelation->value;
-
-                if (!isset($properties[$property->id])) {
-                    $properties[$property->id] = [
-                        'title' => $property->name,
-                        'values' => [],
-                    ];
-                }
-                if ($properties[$property->id] && !in_array($value, $properties[$property->id]['values'])) {
-                    $properties[$property->id]['values'][] = $value;
+                    if (!isset($properties[$property->id])) {
+                        $properties[$property->id] = [
+                            'title' => $property->name,
+                            'values' => [],
+                        ];
+                    }
+                    if ($properties[$property->id] && !in_array($value, $properties[$property->id]['values'])) {
+                        $properties[$property->id]['values'][] = $value;
+                    }
                 }
             }
         }

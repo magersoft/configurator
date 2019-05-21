@@ -244,12 +244,12 @@
             },
             selectProperty() {
                 console.log(this.selectedProperty);
-                const filters = new FormData();
-                filters.append('category_id', this.categoryId);
-                this.selectedProperty.forEach(property => {
-                    filters.append(`property[${property.id}]`, property.value)
-                });
-                axios.post('/api/products', filters);
+                // const filters = new FormData();
+                // filters.append('category_id', this.categoryId);
+                // this.selectedProperty.forEach(property => {
+                //     filters.append(`property[${property.id}]`, property.value)
+                // });
+                axios.post('/api/products', { property: this.selectedProperty });
             },
             closeProductsDialog() {
               this.dialog2 = false;
