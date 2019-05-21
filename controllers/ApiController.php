@@ -191,11 +191,19 @@ class ApiController extends Controller
             $result[] = $product->getProductApi();
         }
 
+        if (Yii::$app->request->post()) {
+            var_dump(Yii::$app->request->post()); die;
+        }
+
         $allProducts = $products->query->all();
         $properties = [];
         foreach ($allProducts as $product) {
             // todo: maybe price?
+            $i = 0;
             foreach ($product->propertyRelations as $propertyRelation) {
+                $i++;
+                if ($i > 2) break;
+                // todo: времено, пока нет таблицы по необходимым проперти
                 $property = $propertyRelation->property;
                 $value = $propertyRelation->value;
 

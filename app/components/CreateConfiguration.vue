@@ -122,8 +122,19 @@
                 <v-card-text>
                     <v-container grid-list-md text-xs-center>
                         <v-layout row wrap>
-                            <v-flex md2 style="width: 200px; height: 100%; background-color: #999999" class="hidden-sm-and-down">
-                                Here filters
+                            <v-flex md2 style="height: 100%;" class="hidden-sm-and-down">
+                                <v-container fluid>
+                                    <div v-for="(property, id) in properties" class="mb-4" :key="id">
+                                        <h3>{{ property.title }}</h3>
+                                        <v-checkbox v-for="(value, key) in property.values"
+                                                    :label="value"
+                                                    :value="{id,value}"
+                                                    v-model="selectedProperty"
+                                                    @change="selectProperty"
+                                                    :key="key"
+                                                    hide-details></v-checkbox>
+                                    </div>
+                                </v-container>
                             </v-flex>
                             <v-flex sm12 md10>
                                 <div v-infinite-scroll="loadMoreProducts" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
@@ -169,6 +180,9 @@
                 busy: false,
                 nextProductPage: null,
                 products: [],
+                properties: [],
+                selectedProperty: [],
+                categoryId: null,
                 categoryTitle: null,
                 name: 'New configuration',
                 type: ['Home', 'Gaming', 'Office'],
@@ -195,6 +209,7 @@
             EventBus.$on('select-config-category', id => {
                 this.nextProductPage = `/api/products?category_id=${id}`;
                 this.dialog2 = true;
+                this.categoryId = id;
                 this.loadMoreProducts();
             });
             EventBus.$on('close-dialog', () => {
@@ -223,12 +238,23 @@
                             this.nextProductPage = response.data.pagination.next || null;
                             this.busy = false;
                             this.categoryTitle = response.data.result[0].category;
+                            this.properties = response.data.properties;
                         })
                 }
+            },
+            selectProperty() {
+                console.log(this.selectedProperty);
+                const filters = new FormData();
+                filters.append('category_id', this.categoryId);
+                this.selectedProperty.forEach(property => {
+                    filters.append(`property[${property.id}]`, property.value)
+                });
+                axios.post('/api/products', filters);
             },
             closeProductsDialog() {
               this.dialog2 = false;
               this.products = [];
+              this.properties = [];
             },
         },
         computed: {
