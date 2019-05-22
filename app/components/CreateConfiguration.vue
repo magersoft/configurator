@@ -120,7 +120,7 @@
                     <v-toolbar-title>{{ categoryTitle }}</v-toolbar-title>
                 </v-toolbar>
                 <v-card-text>
-                    <v-container grid-list-md text-xs-center>
+                    <v-container grid-list-md text-xs-center class="container__relative">
                         <v-layout row wrap>
                             <v-flex md2 style="height: 100%;" class="hidden-sm-and-down">
                                 <v-container fluid>
@@ -131,13 +131,13 @@
                                                     :value="JSON.stringify({id,value})"
                                                     :key="key"
                                                     v-model="selectedProperty"
-                                                    @change="selectProperty"
+                                                    @change="getProducts(true)"
                                                     hide-details></v-checkbox>
                                     </div>
                                 </v-container>
                             </v-flex>
                             <v-flex sm12 md10>
-                                <div v-infinite-scroll="loadMoreProducts" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
+                                <div v-infinite-scroll="getProducts" infinite-scroll-disabled="busy" infinite-scroll-distance="10">
                                     <v-layout row wrap justify-center>
                                         <v-flex xs12 sm6 md4 lg3 v-for="(product, key) of products" :key="key">
                                             <product-card :product="product"></product-card>
@@ -146,9 +146,14 @@
                                 </div>
                             </v-flex>
                         </v-layout>
-                        <v-layout row wrap justify-center>
+                        <v-layout v-if="busy" row wrap justify-center class="progress-modify">
                             <v-progress-circular
-                                    v-if="busy"
+                                    indeterminate
+                                    color="primary"
+                            ></v-progress-circular>
+                        </v-layout>
+                        <v-layout row wrap justify-center>
+                            <v-progress-circular v-if="busy"
                                     indeterminate
                                     color="primary"
                             ></v-progress-circular>
@@ -207,10 +212,10 @@
                 this.getConfigurationItems();
             }
             EventBus.$on('select-config-category', id => {
-                this.nextProductPage = `/api/products?category_id=${id}`;
+                this.nextProductPage = 1;
                 this.dialog2 = true;
                 this.categoryId = id;
-                this.loadMoreProducts();
+                this.getProducts();
             });
             EventBus.$on('close-dialog', () => {
                 this.closeProductsDialog();
@@ -228,50 +233,37 @@
                 this.dialog = false;
                 this.$store.dispatch('SAVE_CONFIGURATION', this.$store.getters.CURRENT_CONFIGURATION);
             },
-            loadMoreProducts() {
-                if (!this.busy && this.nextProductPage) {
+            getProducts(filters = false) {
+                if (!this.busy && this.nextProductPage || filters) {
                     this.busy = true;
 
-                    axios.get(this.nextProductPage)
-                        .then(response => {
-                            this.products.push(...response.data.result);
+                    axios.get('/api/products', {
+                        params: {
+                            category_id: this.categoryId,
+                            page: filters ? 1 : this.nextProductPage || null,
+                            property: this.selectedProperty || null,
+                        }
+                    }).then(response => {
+                            if (filters) {
+                                this.products = response.data.result;
+                            } else {
+                                this.products.push(...response.data.result);
+                            }
+                            if (this.nextProductPage === 1) {
+                                this.categoryTitle = response.data.result[0].category;
+                                this.properties = response.data.properties;
+                            }
                             this.nextProductPage = response.data.pagination.next || null;
                             this.busy = false;
-                            this.categoryTitle = response.data.result[0].category;
-                            this.properties = response.data.properties;
-                            console.log(Object.entries(response.data.properties));
-                        })
+
+                    })
                 }
-            },
-            selectProperty() {
-                console.log(this.selectedProperty);
-                axios.post('/api/products', { property: this.selectedProperty.map(JSON.parse) })
-                    .then(response => {
-                        this.products = response.data.result;
-                        this.nextProductPage = response.data.pagination.next || null;
-                        this.busy = false;
-                        // Object.entries(response.data.properties).map(property => {
-                        //     if ()
-                        // });
-
-                        console.log(this.properties);
-
-                        // const getProperties = response.data.properties;
-                        // for (let property in this.properties) {
-                        //     if (this.properties.hasOwnProperty(property)) {
-                        //         for (let getProperty in getProperties) {
-                        //             if (getProperties.hasOwnProperty(getProperty)) {
-                        //
-                        //             }
-                        //         }
-                        //     }
-                        // }
-                    });
             },
             closeProductsDialog() {
               this.dialog2 = false;
               this.products = [];
               this.properties = [];
+              this.selectedProperty = [];
             },
         },
         computed: {
@@ -300,5 +292,18 @@
         .v-image {
             height: 250px;
         }
+    }
+    .container__relative {
+        position: relative;
+    }
+    .progress-modify {
+        position: absolute;
+        top: 0;
+        height: 100vh;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(255,255,255,.4);
     }
 </style>

@@ -18,11 +18,13 @@ use dektrium\user\traits\AjaxValidationTrait;
 use dektrium\user\traits\EventTrait;
 use Yii;
 use yii\data\ActiveDataProvider;
+use yii\data\Pagination;
 use yii\db\Exception;
 use yii\db\Query;
 use yii\rest\Controller;
 use yii\web\BadRequestHttpException;
 use yii\web\ForbiddenHttpException;
+use yii\web\Link;
 use yii\web\NotFoundHttpException;
 use yii\web\Response;
 use yii\filters\VerbFilter;
@@ -168,22 +170,24 @@ class ApiController extends Controller
     {
         /** @var $product Product */
         $request = Yii::$app->request->get();
-        $post = Yii::$app->request->post();
 
-        unset($request['page']);
         $request['status'] = Product::PRODUCT_STATUS_VALUE_PUBLIC;
+        $page = (int)$request['page'];
+        unset($request['page']);
 
         $products = Product::find()
             ->with(['category', 'productRelations.store', 'productMedia', 'propertyRelations.property.group', 'productStocks.stock']);
-            if (isset($post['property'])) {
+            if (isset($request['property'])) {
                 $property_values = array_map(function($property) {
-                    return $property['value'];
-                }, $post['property']);
+                    $array = json_decode($property, true);
+                    return $array['value'];
+                }, $request['property']);
                 $property_ids = array_map(function ($property) {
-                    return $property['id'];
-                }, $post['property']);
+                    $array = json_decode($property, true);
+                    return $array['id'];
+                }, $request['property']);
                 $property_ids = array_unique($property_ids);
-                $products->andWhere([
+                $products->where(['category_id' => $request['category_id']])->andWhere([
                     'in',
                     'id',
                     (new Query())
@@ -207,28 +211,42 @@ class ApiController extends Controller
             $result[] = $product->getProductApi();
         }
 
-        foreach ($allProducts as $product) {
-            // todo: maybe price?
-            $i = 0;
-            foreach ($product->propertyRelations as $propertyRelation) {
-                $i++;
-                if ($i > 2) break;
-                // todo: времено, пока нет таблицы по необходимым проперти
-                $property = $propertyRelation->property;
-                $value = $propertyRelation->value;
+        if ($page === 1) {
+            foreach ($allProducts as $product) {
+                // todo: maybe price?
+                $i = 0;
+                foreach ($product->propertyRelations as $propertyRelation) {
+                    $i++;
+                    if ($i > 2) break;
+                    // todo: времено, пока нет таблицы по необходимым проперти
+                    $property = $propertyRelation->property;
+                    $value = $propertyRelation->value;
 
-                if (!isset($properties[$property->id])) {
-                    $properties[$property->id] = [
-                        'title' => $property->name,
-                        'values' => [],
-                    ];
-                }
-                if ($properties[$property->id] && !in_array($value, $properties[$property->id]['values'])) {
-                    $properties[$property->id]['values'][] = $value;
+                    if (!isset($properties[$property->id])) {
+                        $properties[$property->id] = [
+                            'title' => $property->name,
+                            'values' => [],
+                        ];
+                    }
+                    if ($properties[$property->id] && !in_array($value, $properties[$property->id]['values'])) {
+                        $properties[$property->id]['values'][] = $value;
+                    }
                 }
             }
         }
-        return ['result' => $result, 'pagination' => $products->getPagination()->getLinks(), 'properties' => $properties];
+
+        $currentPage = $products->getPagination()->getPage(true);
+        $pageCount = $products->getPagination()->getPageCount();
+
+        $pagination = [
+            Link::REL_SELF => $currentPage + 1,
+        ];
+
+        if ($currentPage < $pageCount - 1) {
+            $pagination[Pagination::LINK_NEXT] = $currentPage + 2;
+            $pagination[Pagination::LINK_LAST] = $pageCount - 1;
+        }
+        return ['result' => $result, 'pagination' => $pagination, 'properties' => $properties];
     }
 
     public function actionProduct()
