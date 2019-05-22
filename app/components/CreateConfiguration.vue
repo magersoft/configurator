@@ -128,10 +128,10 @@
                                         <h3>{{ property.title }}</h3>
                                         <v-checkbox v-for="(value, key) in property.values"
                                                     :label="value"
-                                                    :value="{id,value}"
+                                                    :value="JSON.stringify({id,value})"
+                                                    :key="key"
                                                     v-model="selectedProperty"
                                                     @change="selectProperty"
-                                                    :key="key"
                                                     hide-details></v-checkbox>
                                     </div>
                                 </v-container>
@@ -239,17 +239,34 @@
                             this.busy = false;
                             this.categoryTitle = response.data.result[0].category;
                             this.properties = response.data.properties;
+                            console.log(Object.entries(response.data.properties));
                         })
                 }
             },
             selectProperty() {
                 console.log(this.selectedProperty);
-                // const filters = new FormData();
-                // filters.append('category_id', this.categoryId);
-                // this.selectedProperty.forEach(property => {
-                //     filters.append(`property[${property.id}]`, property.value)
-                // });
-                axios.post('/api/products', { property: this.selectedProperty });
+                axios.post('/api/products', { property: this.selectedProperty.map(JSON.parse) })
+                    .then(response => {
+                        this.products = response.data.result;
+                        this.nextProductPage = response.data.pagination.next || null;
+                        this.busy = false;
+                        // Object.entries(response.data.properties).map(property => {
+                        //     if ()
+                        // });
+
+                        console.log(this.properties);
+
+                        // const getProperties = response.data.properties;
+                        // for (let property in this.properties) {
+                        //     if (this.properties.hasOwnProperty(property)) {
+                        //         for (let getProperty in getProperties) {
+                        //             if (getProperties.hasOwnProperty(getProperty)) {
+                        //
+                        //             }
+                        //         }
+                        //     }
+                        // }
+                    });
             },
             closeProductsDialog() {
               this.dialog2 = false;
