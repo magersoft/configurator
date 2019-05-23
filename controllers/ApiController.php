@@ -187,9 +187,10 @@ class ApiController extends Controller
                     return $array['id'];
                 }, $request['property']);
                 $property_ids = array_unique($property_ids);
-                $products->where(['category_id' => $request['category_id']])->andWhere([
-                    'in',
-                    'id',
+                $products->where(['category_id' => $request['category_id']])
+                    ->andWhere([
+                        'in',
+                        'id',
                     (new Query())
                         ->select('product_id')
                         ->from('property_relations')
@@ -246,7 +247,7 @@ class ApiController extends Controller
             $pagination[Pagination::LINK_NEXT] = $currentPage + 2;
             $pagination[Pagination::LINK_LAST] = $pageCount - 1;
         }
-        return ['result' => $result, 'pagination' => $pagination, 'properties' => $properties];
+        return ['products' => $result, 'pagination' => $pagination, 'properties' => $properties];
     }
 
     public function actionProduct()

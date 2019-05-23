@@ -130,6 +130,7 @@
                                                     :label="value"
                                                     :value="JSON.stringify({id,value})"
                                                     :key="key"
+                                                    :disabled="(property.disabledValues).includes(value)"
                                                     v-model="selectedProperty"
                                                     @change="getProducts(true)"
                                                     hide-details></v-checkbox>
@@ -244,16 +245,33 @@
                             property: this.selectedProperty || null,
                         }
                     }).then(response => {
+                            const { products, properties, pagination } = response.data;
+
                             if (filters) {
-                                this.products = response.data.result;
+                                this.products = products;
+
+                                const propertiesCame = [];
+                                for (let property in properties) {
+                                    if (properties.hasOwnProperty(property)) {
+                                        propertiesCame.push(property);
+                                        const values = properties[property].values.map(value => value);
+                                        this.properties[property].disabledValues = this.properties[property].values.map(value => value).filter(value => !values.includes(value));
+                                    }
+                                }
+                                Object.keys(this.properties).filter(key => !propertiesCame.includes(key)).forEach(key => {
+                                    this.properties[key].disabledValues = this.properties[key].values;
+                                })
                             } else {
-                                this.products.push(...response.data.result);
+                                this.products.push(...products);
                             }
                             if (this.nextProductPage === 1) {
-                                this.categoryTitle = response.data.result[0].category;
-                                this.properties = response.data.properties;
+                                this.categoryTitle = products[0].category;
+                                Object.keys(properties).forEach(key => {
+                                    properties[key].disabledValues = [];
+                                });
+                                this.properties = properties;
                             }
-                            this.nextProductPage = response.data.pagination.next || null;
+                            this.nextProductPage = pagination.next || null;
                             this.busy = false;
 
                     })
