@@ -21,6 +21,7 @@ use Yii;
  * @property CategoryProduct[] $categoryProducts
  * @property Product[] $products
  * @property Product[] $products0
+ * @property PropertyCategory[] $propertyCategories
  */
 class Category extends \yii\db\ActiveRecord
 {
@@ -112,6 +113,14 @@ class Category extends \yii\db\ActiveRecord
     public function getProducts0()
     {
         return $this->hasMany(Product::className(), ['category_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPropertyCategories()
+    {
+        return $this->hasMany(PropertyCategory::className(), ['category_id' => 'id']);
     }
 
     public function getCategoryApi()

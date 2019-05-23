@@ -13,6 +13,7 @@ use Yii;
  *
  * @property PropertyGroup $group
  * @property PropertyRelations[] $propertyRelations
+ * @property PropertyCategory[] $propertyCategories
  */
 class Property extends \yii\db\ActiveRecord
 {
@@ -64,6 +65,18 @@ class Property extends \yii\db\ActiveRecord
     {
         return $this->hasMany(PropertyRelations::className(), ['property_id' => 'id']);
     }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPropertyCategories()
+    {
+        return $this->hasMany(PropertyCategory::className(), ['property_id' => 'id']);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
 
     /**
      * {@inheritdoc}
