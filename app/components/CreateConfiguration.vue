@@ -255,17 +255,22 @@
                                     if (properties.hasOwnProperty(property)) {
                                         propertiesCame.push(property);
                                         const values = properties[property].values.map(value => value);
-                                        this.properties[property].disabledValues = this.properties[property].values.map(value => value).filter(value => !values.includes(value));
+                                        this.properties[property].disabledValues = this.properties[property].values
+                                            .map(value => value)
+                                            .filter(value => !values.includes(value));
                                     }
                                 }
-                                Object.keys(this.properties).filter(key => !propertiesCame.includes(key)).forEach(key => {
-                                    this.properties[key].disabledValues = this.properties[key].values;
-                                })
+                                Object.keys(this.properties)
+                                    .filter(key => !propertiesCame.includes(key))
+                                    .forEach(key => {
+                                        this.properties[key].disabledValues = this.properties[key].values;
+                                });
                             } else {
                                 this.products.push(...products);
                             }
                             if (this.nextProductPage === 1) {
                                 this.categoryTitle = products[0].category;
+
                                 Object.keys(properties).forEach(key => {
                                     properties[key].disabledValues = [];
                                 });
