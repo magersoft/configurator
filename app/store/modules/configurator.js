@@ -13,7 +13,15 @@ const mutations = {
         state.configurationProducts = payload;
     },
     ADD_PRODUCT: (state, payload) => {
-        state.configurationProducts = state.configurationProducts.map(item => item.id === payload.category_id ? payload : item);
+        state.configurationProducts = state.configurationProducts.map(item => {
+            if (item.id === payload.category_id) {
+                return payload;
+            } else if (item.category_id === payload.category_id) {
+                return payload;
+            } else {
+                return item;
+            }
+        });
     },
     DELETE_PRODUCT: (state, payload) => {
         state.configurationProducts.splice(state.configurationProducts.indexOf(payload), 1);

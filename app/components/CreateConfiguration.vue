@@ -212,7 +212,7 @@
             if (this.dialog) {
                 this.getConfigurationItems();
             }
-            EventBus.$on('select-config-category', id => {
+            EventBus.$on('select-product', id => {
                 this.nextProductPage = 1;
                 this.dialog2 = true;
                 this.categoryId = id;

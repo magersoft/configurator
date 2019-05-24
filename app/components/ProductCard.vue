@@ -27,10 +27,16 @@
             </v-btn>
             <v-btn
                     v-if="forConfig && !addedProduct(product)"
-                    @click="selectConfigCategory"
+                    @click="selectProduct(product.id)"
                     color="primary"
             >
                 Add
+            </v-btn>
+            <v-btn
+                    v-if="forConfig && addedProduct(product)"
+                    @click="selectProduct(product.category_id)"
+                    color="warning">
+                Change
             </v-btn>
             <v-btn
                     v-if="forConfig && addedProduct(product)"
@@ -54,12 +60,12 @@
         },
         data() {
             return {
-                category_id: this.product.id
+
             }
         },
         methods: {
-            selectConfigCategory() {
-                EventBus.$emit('select-config-category', this.category_id);
+            selectProduct(id) {
+                EventBus.$emit('select-product', id);
             },
             addProduct(product, event) {
                 this.$store.dispatch('SAVE_PRODUCT', product);
