@@ -26,6 +26,8 @@ use Yii;
 class Category extends \yii\db\ActiveRecord
 {
 
+    public $property_ids;
+
     const STATUS_ARCHIVED = 0;
     const STATUS_PUBLIC = 1;
 
@@ -55,6 +57,8 @@ class Category extends \yii\db\ActiveRecord
             [['title', 'slug', 'thumbnail'], 'string', 'max' => 255],
             [['unique_id'], 'unique'],
             [['parent_id'], 'exist', 'skipOnError' => true, 'targetClass' => Category::className(), 'targetAttribute' => ['parent_id' => 'id']],
+            ['property_ids', 'each', 'rule' => ['exist', 'skipOnError' => true, 'targetClass' => Property::className(), 'targetAttribute' => 'id']],
+            ['property_ids', 'default', 'value' => []],
         ];
     }
 
@@ -72,6 +76,7 @@ class Category extends \yii\db\ActiveRecord
             'status' => Yii::t('app', 'Status'),
             'menu_index' => Yii::t('app', 'Menu Index'),
             'unique_id' => Yii::t('app', 'Unique ID'),
+            'property_ids' => 'Property Ids'
         ];
     }
 
@@ -140,6 +145,11 @@ class Category extends \yii\db\ActiveRecord
             return '/images/placeholder.jpg';
         }
         return '/uploads/'.$this->thumbnail;
+    }
+
+    public function loadPropertyIds()
+    {
+        $this->property_ids = array_column($this->propertyCategories, 'property_id');
     }
 
     /**

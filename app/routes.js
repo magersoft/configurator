@@ -8,6 +8,7 @@ import Registration from './pages/RegistrationPage';
 import Categories from './pages/CategoriesPage';
 import Category from './pages/CategoryPage';
 import Product from './pages/ProductPage';
+import Error from './pages/ErrorPage';
 
 // const Main = () => import(/* webpackChunkName: "home" */'./pages/MainPage');
 // const About = () => import(/* webpackChunkName: "about" */'./pages/AboutPage');
@@ -26,7 +27,8 @@ let routes = [
     { path: '/registration', component: Registration, name: 'registration' },
     { path: '/categories', component: Categories, name: 'categories' },
     { path: '/category/:id', component: Category, name: 'category' },
-    { path: '/product/:id', component: Product, name: 'product' }
+    { path: '/product/:id', component: Product, name: 'product' },
+    { path: '*', component: Error, name: 'error' }
 ];
 
 let router = new VueRouter({

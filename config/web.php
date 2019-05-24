@@ -63,10 +63,16 @@ $config = [
             'rules' => [
 //                '<controller:(about|login|categories|registration)>' => 'site/index',
 //                '<controller:(\w|-)+>/' => '<controller>/index',
+//                '<controller:\w+>/<action:(\w|-)+>/<id:\d+>' => '<controller>/<action>',
+//                '<module:\w+>/<controller:\w+>/<action:(\w|-)+>' => '<module>/<controller>/<action>',
+//                '<controller:\w+>/<action:[-A-Za-z]+>' => '<controller>/<action>',
+//                '<n:.*>' => 'site/index',
+
+                '<controller:(about|login|registration|categories)>' => 'site/index',
+                '<controller:(\w|-)+>/' => '<controller>/index',
                 '<controller:\w+>/<action:(\w|-)+>/<id:\d+>' => '<controller>/<action>',
                 '<module:\w+>/<controller:\w+>/<action:(\w|-)+>' => '<module>/<controller>/<action>',
-                '<controller:\w+>/<action:[-A-Za-z]+>' => '<controller>/<action>',
-                '<n:.*>' => 'site/index',
+                '<controller:\w+>/<action:(\w|-)+>' => '<controller>/<action>'
             ],
         ]
     ],

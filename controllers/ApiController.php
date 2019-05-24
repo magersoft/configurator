@@ -8,6 +8,7 @@ use app\models\ConfigurationRelations;
 use app\models\Product;
 use app\models\ProductRelations;
 use app\models\Property;
+use app\models\PropertyCategory;
 use app\models\PropertyGroup;
 use app\models\PropertyRelations;
 use dektrium\user\controllers\RegistrationController;
@@ -174,6 +175,7 @@ class ApiController extends Controller
         $request['status'] = Product::PRODUCT_STATUS_VALUE_PUBLIC;
         $page = (int)$request['page'];
         unset($request['page']);
+        $category_id = $request['category_id'];
 
         $products = Product::find()
             ->with(['category', 'productRelations.store', 'productMedia', 'propertyRelations.property.group', 'productStocks.stock']);
@@ -187,7 +189,7 @@ class ApiController extends Controller
                     return $array['id'];
                 }, $request['property']);
                 $property_ids = array_unique($property_ids);
-                $products->where(['category_id' => $request['category_id']])
+                $products->where(['category_id' => $category_id])
                     ->andWhere([
                         'in',
                         'id',
@@ -206,6 +208,8 @@ class ApiController extends Controller
 
         $result = [];
         $properties = [];
+        $allowedProperties = PropertyCategory::find()->select(['property_id', 'menuindex'])->where(['category_id' => $category_id])->asArray()->all();
+        $allowedPropertiesIds = array_column($allowedProperties, 'property_id');
 
 
         foreach ($products->getModels() as $product) {
@@ -217,11 +221,13 @@ class ApiController extends Controller
                 // todo: maybe price?
                 $i = 0;
                 foreach ($product->propertyRelations as $propertyRelation) {
-                    $i++;
-                    if ($i > 2) break;
-                    // todo: времено, пока нет таблицы по необходимым проперти
                     $property = $propertyRelation->property;
                     $value = $propertyRelation->value;
+                    if ($allowedPropertiesIds) {
+                        if (!in_array($property->id, $allowedPropertiesIds)) {
+                            continue;
+                        }
+                    }
 
                     if (!isset($properties[$property->id])) {
                         $properties[$property->id] = [
