@@ -241,8 +241,9 @@
                     axios.get('/api/products', {
                         params: {
                             category_id: this.categoryId,
-                            page: filters ? 1 : this.nextProductPage || null,
+                            configuration_id: this.$store.getters.CURRENT_CONFIGURATION.id,
                             property: this.selectedProperty || null,
+                            page: filters ? 1 : this.nextProductPage || null,
                         }
                     }).then(response => {
                             const { products, properties, pagination } = response.data;

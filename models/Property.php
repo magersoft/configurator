@@ -10,6 +10,7 @@ use Yii;
  * @property int $id
  * @property string $name
  * @property int $group_id
+ * @property int $main
  *
  * @property PropertyGroup $group
  * @property PropertyRelations[] $propertyRelations
@@ -31,7 +32,7 @@ class Property extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name', 'group_id'], 'required'],
+            [['name', 'group_id', 'main'], 'required'],
             [['group_id'], 'integer'],
             [['name'], 'string', 'max' => 255],
             [['group_id'], 'exist', 'skipOnError' => true, 'targetClass' => PropertyGroup::className(), 'targetAttribute' => ['group_id' => 'id']],
@@ -47,6 +48,7 @@ class Property extends \yii\db\ActiveRecord
             'id' => Yii::t('app', 'ID'),
             'name' => Yii::t('app', 'Name'),
             'group_id' => Yii::t('app', 'Group ID'),
+            'main' => 'Main property?'
         ];
     }
 

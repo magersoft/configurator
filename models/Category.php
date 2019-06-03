@@ -36,7 +36,21 @@ class Category extends \yii\db\ActiveRecord
         self::STATUS_PUBLIC => 'Опубликовано'
     ];
 
-    const CONFIG_CATEGORY = [67,71,72,73,74,75];
+    const PROCESSORS = 67;
+    const MOTHERBOARDS = 71;
+    const RAM = 72;
+    const VIDEOCARDS = 73;
+    const BP = 74;
+    const CORPUS = 75;
+
+    const CONFIG_CATEGORY = [
+        self::PROCESSORS,
+        self::MOTHERBOARDS,
+        self::RAM,
+        self::VIDEOCARDS,
+        self::BP,
+        self::CORPUS
+    ];
 
     /**
      * {@inheritdoc}

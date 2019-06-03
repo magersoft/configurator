@@ -2,6 +2,7 @@
 
 namespace app\controllers;
 
+use app\components\SelectionComponents;
 use app\models\Category;
 use app\models\Configuration;
 use app\models\ConfigurationRelations;
@@ -167,6 +168,10 @@ class ApiController extends Controller
         return Category::find()->all();
     }
 
+    /**
+     * @return array
+     * @throws BadRequestHttpException
+     */
     public function actionProducts()
     {
         /** @var $product Product */
@@ -174,34 +179,14 @@ class ApiController extends Controller
 
         $request['status'] = Product::PRODUCT_STATUS_VALUE_PUBLIC;
         $page = (int)$request['page'];
-        unset($request['page']);
         $category_id = $request['category_id'];
 
-        $products = Product::find()
-            ->with(['category', 'productRelations.store', 'productMedia', 'propertyRelations.property.group', 'productStocks.stock']);
-            if (isset($request['property'])) {
-                $property_values = array_map(function($property) {
-                    $array = json_decode($property, true);
-                    return $array['value'];
-                }, $request['property']);
-                $property_ids = array_map(function ($property) {
-                    $array = json_decode($property, true);
-                    return $array['id'];
-                }, $request['property']);
-                $property_ids = array_unique($property_ids);
-                $products->where(['category_id' => $category_id])
-                    ->andWhere([
-                        'in',
-                        'id',
-                    (new Query())
-                        ->select('product_id')
-                        ->from('property_relations')
-                        ->where(['value' => $property_values])
-                        ->andWhere(['in', 'property_id', $property_ids])
-                ]);
-            } else {
-                $products->where($request);
-            }
+        unset($request['page']);
+
+        if ($configuration_id = $request['configuration_id']) {
+            $configuration = Configuration::findOne(['id' => $configuration_id]);
+            $products = SelectionComponents::productsProcessing($configuration, $request);
+        }
 
         $products = new ActiveDataProvider(['query' => $products]);
         $allProducts = $products->query->all();
@@ -428,6 +413,11 @@ class ApiController extends Controller
             $transaction->rollBack();
             throw $e;
         }
+    }
+
+    private static function getMainProductProperty()
+    {
+
     }
 
     /**
