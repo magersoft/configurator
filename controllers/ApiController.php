@@ -415,11 +415,6 @@ class ApiController extends Controller
         }
     }
 
-    private static function getMainProductProperty()
-    {
-
-    }
-
     /**
      * @throws ForbiddenHttpException
      * @throws NotFoundHttpException
